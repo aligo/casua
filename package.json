@@ -1,0 +1,18 @@
+{
+  "name": "casua",
+  "description": "A casual and neat Structured Template and MVVM engine.",
+  "version": "0.0.0",
+  "author": {
+    "name": "aligo Kang",
+    "email": "aligo_x@163.com"
+  },
+  "repository": { 
+    "type": "git",
+    "url": "git@github.com:aligo/casua.git"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=0.8.0"
+  }
+}
