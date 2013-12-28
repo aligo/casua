@@ -8,32 +8,36 @@ Released under the MIT license
 
 
 (function() {
-  var casua;
+  var $, casua;
 
-  casua = {};
+  $ = jQuery;
 
-  casua.Element = (function() {
-    function Element(element) {
-      var r, tag_data;
-      if (element instanceof Element) {
-        element;
-      } else if (typeof element === 'string') {
-        if (element.charAt(0) !== '<') {
-          tag_data = element.split(' ');
-          this[0] = document.createElement((r = tag_data[0].match(/^([^\.^#]+)/)) ? r[1] : 'div');
-          if (r = tag_data[0].match(/\.([^\.^#]+)/g)) {
-            this[0].className = r.join(' ').replace(/\./g, '');
-          }
-          if (r = tag_data[0].match(/#([^\.^#]+)/)) {
-            this[0].id = r[1];
+  casua = {
+    createElement: function(element) {
+      var $el, attr, attrs_data, el, r, tag_data, _i, _len;
+      if (element.charAt(0) !== '<') {
+        attrs_data = element.split(' ');
+        tag_data = attrs_data.shift();
+        el = document.createElement((r = tag_data.match(/^([^\.^#]+)/)) ? r[1] : 'div');
+        if (r = tag_data.match(/\.([^\.^#]+)/g)) {
+          el.className = r.join(' ').replace(/\./g, '');
+        }
+        if (r = tag_data.match(/#([^\.^#]+)/)) {
+          el.id = r[1];
+        }
+        $el = $(el);
+        for (_i = 0, _len = attrs_data.length; _i < _len; _i++) {
+          attr = attrs_data[_i];
+          if (r = attr.match(/^([^=]+)(?:=(['"])(.+?)\2)?$/)) {
+            $el.attr(r[1], r[3] || '');
           }
         }
+        return $el;
+      } else {
+        return $(element);
       }
     }
-
-    return Element;
-
-  })();
+  };
 
   window.casua = casua;
 
