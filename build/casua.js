@@ -8,35 +8,151 @@ Released under the MIT license
 
 
 (function() {
-  var $, casua;
+  var casua;
 
-  $ = jQuery;
+  casua = {};
 
-  casua = {
-    createElement: function(element) {
-      var $el, attr, attrs_data, el, r, tag_data, _i, _len;
-      if (element.charAt(0) !== '<') {
-        attrs_data = element.split(' ');
-        tag_data = attrs_data.shift();
-        el = document.createElement((r = tag_data.match(/^([^\.^#]+)/)) ? r[1] : 'div');
-        if (r = tag_data.match(/\.([^\.^#]+)/g)) {
-          el.className = r.join(' ').replace(/\./g, '');
+  casua.Node = (function() {
+    var _addNodes, _forEach, _push;
+
+    _addNodes = function(_node, elements) {
+      var element, _i, _len, _results;
+      if (elements.nodeName) {
+        elements = [elements];
+      }
+      _results = [];
+      for (_i = 0, _len = elements.length; _i < _len; _i++) {
+        element = elements[_i];
+        _results.push(_push(_node, element));
+      }
+      return _results;
+    };
+
+    _push = function(_node, one) {
+      _node[_node.length] = one;
+      return _node.length += 1;
+    };
+
+    _forEach = function(_node, callback) {
+      var one, ret;
+      ret = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = _node.length; _i < _len; _i++) {
+          one = _node[_i];
+          _results.push(callback.apply(one, [one]));
         }
-        if (r = tag_data.match(/#([^\.^#]+)/)) {
-          el.id = r[1];
+        return _results;
+      })();
+      return ret[0];
+    };
+
+    Node.prototype.length = 0;
+
+    function Node(node_meta) {
+      var attr, attrs_data, el, r, tag_data, _i, _len;
+      if (node_meta instanceof casua.Node) {
+        return node_meta;
+      } else if (typeof node_meta === 'string') {
+        if (node_meta.charAt(0) !== '<') {
+          attrs_data = node_meta.split(' ');
+          tag_data = attrs_data.shift();
+          el = document.createElement((r = tag_data.match(/^([^\.^#]+)/)) ? r[1] : 'div');
+          if (r = tag_data.match(/\.([^\.^#]+)/g)) {
+            el.className = r.join(' ').replace(/\./g, '');
+          }
+          if (r = tag_data.match(/#([^\.^#]+)/)) {
+            el.id = r[1];
+          }
+          _addNodes(this, el);
         }
-        $el = $(el);
         for (_i = 0, _len = attrs_data.length; _i < _len; _i++) {
           attr = attrs_data[_i];
           if (r = attr.match(/^([^=]+)(?:=(['"])(.+?)\2)?$/)) {
-            $el.attr(r[1], r[3] || '');
+            this.attr(r[1], r[3] || '');
           }
         }
-        return $el;
-      } else {
-        return $(element);
+      } else if (node_meta.nodeName) {
+        _addNodes(this, node_meta);
       }
     }
+
+    Node.prototype.attr = function(name, value) {
+      var ret;
+      ret = _forEach(this, function() {
+        name = name.toLowerCase();
+        if (value != null) {
+          return this.setAttribute(name, value);
+        } else {
+          return this.getAttribute(name, 2);
+        }
+      });
+      if (value != null) {
+        return this;
+      } else {
+        return ret;
+      }
+    };
+
+    Node.prototype.append = function(node) {
+      _forEach(this, function(parent) {
+        return _forEach(node, function(child) {
+          return parent.appendChild(child);
+        });
+      });
+      return this;
+    };
+
+    Node.prototype.empty = function() {
+      _forEach(this, function() {
+        var _results;
+        _results = [];
+        while (this.firstChild) {
+          _results.push(this.removeChild(this.firstChild));
+        }
+        return _results;
+      });
+      return this;
+    };
+
+    return Node;
+
+  })();
+
+  casua.defineController = function(methods) {
+    var _renderNode;
+    _renderNode = function(_root, template) {
+      var child, node, node_meta, _results;
+      _results = [];
+      for (node_meta in template) {
+        child = template[node_meta];
+        if (node_meta.charAt(0) !== '@') {
+          node = new casua.Node(node_meta);
+          _root.append(node);
+          if (typeof child === 'object') {
+            _results.push(_renderNode(node, child));
+          } else {
+            _results.push(void 0);
+          }
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+    return (function() {
+      function _Class(init_data) {}
+
+      _Class.prototype.render = function(template) {
+        var fragment;
+        fragment = new casua.Node(document.createDocumentFragment());
+        _renderNode(fragment, template);
+        return fragment;
+      };
+
+      return _Class;
+
+    })();
   };
 
   window.casua = casua;
