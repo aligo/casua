@@ -206,10 +206,10 @@ Released under the MIT license
 
   })();
 
-  casua.defineController = function(methods) {
+  casua.defineController = function(fn) {
     var _renderNode;
-    _renderNode = function(_root, template) {
-      var child, node, node_meta, _results;
+    _renderNode = function(_controller, _root, template) {
+      var child, node, node_meta, r, _results;
       _results = [];
       for (node_meta in template) {
         child = template[node_meta];
@@ -217,23 +217,37 @@ Released under the MIT license
           node = new casua.Node(node_meta);
           _root.append(node);
           if (typeof child === 'object') {
-            _results.push(_renderNode(node, child));
+            _results.push(_renderNode(_controller, node, child));
           } else {
             _results.push(void 0);
           }
         } else {
-          _results.push(void 0);
+          if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\w+))?$/)) {
+            switch (r[1]) {
+              case 'on':
+                _results.push(_root.on(r[2], _controller.methods[child]));
+                break;
+              default:
+                _results.push(void 0);
+            }
+          } else {
+            _results.push(void 0);
+          }
         }
       }
       return _results;
     };
     return (function() {
-      function _Class(init_data) {}
+      function _Class(init_data) {
+        var scope;
+        scope = init_data;
+        this.methods = fn.call(this, scope);
+      }
 
       _Class.prototype.render = function(template) {
         var fragment;
         fragment = new casua.Node(document.createDocumentFragment());
-        _renderNode(fragment, template);
+        _renderNode(this, fragment, template);
         return fragment;
       };
 

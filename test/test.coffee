@@ -1,6 +1,7 @@
 _trigger = (node, event_type) ->
   e = document.createEvent 'HTMLEvents'
   e.initEvent event_type, true, true
+  node = [node] unless node.length
   for el in node
     el.dispatchEvent e
 
@@ -61,14 +62,34 @@ test 'Should can trigger()', ->
 module 'Controller'
 test 'defineController', ->
   container = new casua.Node ''
-  testController = casua.defineController
-    clickOne: ->
-      console.log 'ok'
-  testCtrlInst = new testController
-    title: 'test'
+  testController = casua.defineController ->
+  testCtrlInst = new testController {}
   container.empty().append testCtrlInst.render
     '.test':
       '.test2': ''
-
   equal container[0].innerHTML, '<div class="test"><div class="test2"></div></div>', 'ok'
+
+test 'define on', ->
+  clicked = 0
+  testController = casua.defineController ->
+    clickOne: -> 
+      clicked = 1
+    clickTwo: -> 
+      clicked += 5
+  testCtrlInst = new testController {}
+  fragment1 = testCtrlInst.render
+    'a':
+      '@on click': 'clickOne'
+  _trigger fragment1[0].children[0], 'click'
+  equal clicked, 1, '@on click: clickOne'
+
+  fragment2 = testCtrlInst.render
+    'a':
+      '@on click': 'clickOne'
+      '@on click': 'clickTwo'
+  _trigger fragment2[0].children[0], 'click'
+  equal clicked, 6, '@on click: clickTwo'
+
+  _trigger fragment1[0].children[0], 'click'
+  equal clicked, 1, '@on click: clickOne'
 

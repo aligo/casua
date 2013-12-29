@@ -123,21 +123,28 @@ class casua.Node
       event[key] = value for key, value of event_data
       @dispatchEvent event
 
-casua.defineController = (methods) ->
-  _renderNode = (_root, template) ->
+casua.defineController = (fn) ->
+  _renderNode = (_controller, _root, template) ->
     for node_meta, child of template
-      if node_meta.charAt(0) != '@'
+      unless node_meta.charAt(0) == '@'
         node = new casua.Node node_meta
         _root.append node
         if typeof child is 'object'
-          _renderNode node, child
+          _renderNode _controller, node, child
+      else
+        if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\w+))?$/)
+          switch r[1]
+            when 'on'
+              _root.on r[2], _controller.methods[child]
 
   class
     constructor: (init_data) ->
+      scope = init_data # temporary
+      @methods = fn.call @, scope
 
     render: (template) ->
       fragment = new casua.Node document.createDocumentFragment()
-      _renderNode fragment, template
+      _renderNode @, fragment, template
       fragment
 
 
