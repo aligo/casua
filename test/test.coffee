@@ -34,6 +34,17 @@ test 'Should can empty()', ->
   node[0].innerHTML = 'xxxx'
   equal node.empty()[0].innerHTML, '', 'empty'
 
+test 'Should can on()', ->
+  node = new casua.Node 'a'
+  node.on 'click', ->
+    console.log 'test'
+  # $(node[0]).trigger 'click'
+  evt = document.createEvent 'HTMLEvents'
+  evt.initEvent 'click', true, true
+  node[0].dispatchEvent evt
+  console.log node
+  equal 'ok', 'ok', 'ok'
+
 module 'Controller'
 test 'defineController', ->
   container = new casua.Node ''

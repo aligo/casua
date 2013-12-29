@@ -8,12 +8,23 @@ Released under the MIT license
 
 
 (function() {
-  var casua;
+  var casua, _shallowCopy;
+
+  _shallowCopy = function(src, dst) {
+    var key;
+    if (dst == null) {
+      dst = {};
+    }
+    for (key in src) {
+      dst[key] = src[key];
+    }
+    return dst;
+  };
 
   casua = {};
 
   casua.Node = (function() {
-    var _addNodes, _forEach, _push;
+    var __addEventListenerFn, __createEventHanlder, __removeEventListenerFn, _addNodes, _forEach, _push;
 
     _addNodes = function(_node, elements) {
       var element, _i, _len, _results;
@@ -34,18 +45,70 @@ Released under the MIT license
     };
 
     _forEach = function(_node, callback) {
-      var one, ret;
+      var idx, one, ret;
       ret = (function() {
         var _i, _len, _results;
         _results = [];
-        for (_i = 0, _len = _node.length; _i < _len; _i++) {
-          one = _node[_i];
-          _results.push(callback.apply(one, [one]));
+        for (idx = _i = 0, _len = _node.length; _i < _len; idx = ++_i) {
+          one = _node[idx];
+          _results.push(callback.call(one, idx, one));
         }
         return _results;
       })();
       return ret[0];
     };
+
+    __addEventListenerFn = window.document.addEventListener ? function(element, type, fn) {
+      return element.addEventListener(type, fn, false);
+    } : function(element, type, fn) {
+      return element.attachEvent('on' + type, fn);
+    };
+
+    __removeEventListenerFn = window.document.removeEventListener ? function(element, type, fn) {
+      return element.removeEventListener(type, fn, false);
+    } : function(element, type, fn) {
+      return element.detachEvent('on' + type, fn);
+    };
+
+    __createEventHanlder = function(element, events) {
+      var ret;
+      ret = function(event, type) {
+        var eventFns, fn, i, prevent;
+        event.preventDefault || (event.preventDefault = function() {
+          return event.returnValue = false;
+        });
+        event.stopPropagation || (event.stopPropagation = function() {
+          return event.cancelBubble = true;
+        });
+        event.target || (event.target = event.srcElement || document);
+        if (event.defaultPrevented == null) {
+          prevent = event.preventDefault;
+          event.preventDefault = function() {
+            event.defaultPrevented = true;
+            return prevent.call(event);
+          };
+          event.defaultPrevented = false;
+        }
+        event.isDefaultPrevented = function() {
+          return event.defaultPrevented || (event.returnValue === false);
+        };
+        eventFns = _shallowCopy(events[type || event.type] || []);
+        for (i in eventFns) {
+          fn = eventFns[i];
+          fn.call(element, event);
+        }
+        delete event.preventDefault;
+        delete event.stopPropagation;
+        return delete event.isDefaultPrevented;
+      };
+      ret.elem = element;
+      ret.handleds = [];
+      return ret;
+    };
+
+    Node.prototype.handlers = {};
+
+    Node.prototype.events = {};
 
     Node.prototype.length = 0;
 
@@ -95,8 +158,8 @@ Released under the MIT license
     };
 
     Node.prototype.append = function(node) {
-      _forEach(this, function(parent) {
-        return _forEach(node, function(child) {
+      _forEach(this, function(i, parent) {
+        return _forEach(node, function(j, child) {
           return parent.appendChild(child);
         });
       });
@@ -113,6 +176,22 @@ Released under the MIT license
         return _results;
       });
       return this;
+    };
+
+    Node.prototype.on = function(type, fn) {
+      var _base, _node;
+      _node = this;
+      (_base = this.events)[type] || (_base[type] = []);
+      this.events[type].push(fn);
+      return _forEach(this, function(idx) {
+        var handleds, handler, _base1;
+        handler = (_base1 = _node.handlers)[idx] || (_base1[idx] = __createEventHanlder(this, _node.events));
+        handleds = handler.handleds;
+        if (handleds.indexOf(type) === -1) {
+          __addEventListenerFn(this, type, handler);
+          return handleds.push(type);
+        }
+      });
     };
 
     return Node;

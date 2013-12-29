@@ -4,6 +4,13 @@ Copyright (c) 2013-2014 aligo Kang
 
 Released under the MIT license
 ###
+
+
+
+_shallowCopy = (src, dst = {}) ->
+  dst[key] = src[key] for key of src
+  dst
+
 casua = {}
 
 class casua.Node
@@ -18,10 +25,41 @@ class casua.Node
     _node.length += 1
 
   _forEach = (_node, callback) ->
-    ret = for one in _node
-      callback.apply one, [one]
+    ret = for one, idx in _node
+      callback.call one, idx, one
     ret[0]
+  __addEventListenerFn = if window.document.addEventListener
+    (element, type, fn) -> element.addEventListener type, fn, false
+  else
+    (element, type, fn) -> element.attachEvent 'on' + type, fn
+  __removeEventListenerFn = if window.document.removeEventListener
+    (element, type, fn) -> element.removeEventListener type, fn, false
+  else
+    (element, type, fn) -> element.detachEvent 'on' + type, fn
 
+  __createEventHanlder = (element, events) ->
+    ret = (event, type) ->
+      event.preventDefault ||= -> event.returnValue = false
+      event.stopPropagation ||= -> event.cancelBubble = true
+      event.target ||= event.srcElement || document
+      unless event.defaultPrevented?
+        prevent = event.preventDefault
+        event.preventDefault = ->
+          event.defaultPrevented = true
+          prevent.call event
+        event.defaultPrevented = false
+      event.isDefaultPrevented = -> ( event.defaultPrevented ) ||  ( event.returnValue == false )
+      eventFns = _shallowCopy( events[type || event.type] || [])
+      fn.call element, event for i, fn of eventFns
+      delete event.preventDefault
+      delete event.stopPropagation
+      delete event.isDefaultPrevented
+    ret.elem = element
+    ret.handleds = []
+    ret
+
+  handlers: {}
+  events: {}
   length: 0
   constructor: (node_meta) ->
     if node_meta instanceof casua.Node
@@ -58,7 +96,7 @@ class casua.Node
       ret
     
   append: (node) ->
-    _forEach @, (parent) -> _forEach node, (child) -> parent.appendChild child
+    _forEach @, (i, parent) -> _forEach node, (j, child) -> parent.appendChild child
     @
 
   empty: ->
@@ -66,6 +104,17 @@ class casua.Node
       while @firstChild
         @removeChild @firstChild
     @
+
+  on: (type, fn) ->
+    _node = @
+    @events[type] ||= []
+    @events[type].push fn
+    _forEach @, (idx) ->
+      handler = _node.handlers[idx] ||= __createEventHanlder @, _node.events
+      handleds = handler.handleds
+      if handleds.indexOf(type) == -1
+        __addEventListenerFn @, type, handler
+        handleds.push type
 
 casua.defineController = (methods) ->
   _renderNode = (_root, template) ->
