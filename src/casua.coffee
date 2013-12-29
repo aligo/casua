@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 _shallowCopy = (src, dst = {}) ->
-  dst[key] = src[key] for key of src
+  dst[key] = value for key, value of src
   dst
 
 casua = {}
@@ -32,10 +32,10 @@ class casua.Node
     (element, type, fn) -> element.addEventListener type, fn, false
   else
     (element, type, fn) -> element.attachEvent 'on' + type, fn
-  __removeEventListenerFn = if window.document.removeEventListener
-    (element, type, fn) -> element.removeEventListener type, fn, false
-  else
-    (element, type, fn) -> element.detachEvent 'on' + type, fn
+  # __removeEventListenerFn = if window.document.removeEventListener
+  #   (element, type, fn) -> element.removeEventListener type, fn, false
+  # else
+  #   (element, type, fn) -> element.detachEvent 'on' + type, fn
 
   __createEventHanlder = (element, events) ->
     ret = (event, type) ->
@@ -58,10 +58,10 @@ class casua.Node
     ret.handleds = []
     ret
 
-  handlers: {}
-  events: {}
-  length: 0
   constructor: (node_meta) ->
+    @handlers = {}
+    @events = {}
+    @length = 0
     if node_meta instanceof casua.Node
       return node_meta
     else if typeof node_meta is 'string'
@@ -115,6 +115,13 @@ class casua.Node
       if handleds.indexOf(type) == -1
         __addEventListenerFn @, type, handler
         handleds.push type
+
+  trigger: (type, event_data = {}) ->
+    _forEach @, ->
+      event = document.createEvent 'HTMLEvents'
+      event.initEvent type, true, true
+      event[key] = value for key, value of event_data
+      @dispatchEvent event
 
 casua.defineController = (methods) ->
   _renderNode = (_root, template) ->

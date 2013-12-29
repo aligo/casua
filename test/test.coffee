@@ -1,3 +1,9 @@
+_trigger = (node, event_type) ->
+  e = document.createEvent 'HTMLEvents'
+  e.initEvent event_type, true, true
+  for el in node
+    el.dispatchEvent e
+
 module 'Node'
 test 'Should can parse node_meta to build DOM node', ->
   tests_data =
@@ -35,15 +41,22 @@ test 'Should can empty()', ->
   equal node.empty()[0].innerHTML, '', 'empty'
 
 test 'Should can on()', ->
+  clicked = 0
   node = new casua.Node 'a'
   node.on 'click', ->
-    console.log 'test'
-  # $(node[0]).trigger 'click'
-  evt = document.createEvent 'HTMLEvents'
-  evt.initEvent 'click', true, true
-  node[0].dispatchEvent evt
-  console.log node
-  equal 'ok', 'ok', 'ok'
+    clicked += 1
+  node.on 'click', ->
+    clicked += 2
+  _trigger node, 'click'
+  equal clicked, 3, 'ok'
+
+test 'Should can trigger()', ->
+  clicked = 0
+  node = new casua.Node 'a'
+  node.on 'click', (event) ->
+    clicked = event.test_data
+  node.trigger 'click', { test_data: 5 }
+  equal clicked, 5, 'ok'
 
 module 'Controller'
 test 'defineController', ->

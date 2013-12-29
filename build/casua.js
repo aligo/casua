@@ -11,12 +11,13 @@ Released under the MIT license
   var casua, _shallowCopy;
 
   _shallowCopy = function(src, dst) {
-    var key;
+    var key, value;
     if (dst == null) {
       dst = {};
     }
     for (key in src) {
-      dst[key] = src[key];
+      value = src[key];
+      dst[key] = value;
     }
     return dst;
   };
@@ -24,7 +25,7 @@ Released under the MIT license
   casua = {};
 
   casua.Node = (function() {
-    var __addEventListenerFn, __createEventHanlder, __removeEventListenerFn, _addNodes, _forEach, _push;
+    var __addEventListenerFn, __createEventHanlder, _addNodes, _forEach, _push;
 
     _addNodes = function(_node, elements) {
       var element, _i, _len, _results;
@@ -64,12 +65,6 @@ Released under the MIT license
       return element.attachEvent('on' + type, fn);
     };
 
-    __removeEventListenerFn = window.document.removeEventListener ? function(element, type, fn) {
-      return element.removeEventListener(type, fn, false);
-    } : function(element, type, fn) {
-      return element.detachEvent('on' + type, fn);
-    };
-
     __createEventHanlder = function(element, events) {
       var ret;
       ret = function(event, type) {
@@ -106,14 +101,11 @@ Released under the MIT license
       return ret;
     };
 
-    Node.prototype.handlers = {};
-
-    Node.prototype.events = {};
-
-    Node.prototype.length = 0;
-
     function Node(node_meta) {
       var attr, attrs_data, el, r, tag_data, _i, _len;
+      this.handlers = {};
+      this.events = {};
+      this.length = 0;
       if (node_meta instanceof casua.Node) {
         return node_meta;
       } else if (typeof node_meta === 'string') {
@@ -191,6 +183,22 @@ Released under the MIT license
           __addEventListenerFn(this, type, handler);
           return handleds.push(type);
         }
+      });
+    };
+
+    Node.prototype.trigger = function(type, event_data) {
+      if (event_data == null) {
+        event_data = {};
+      }
+      return _forEach(this, function() {
+        var event, key, value;
+        event = document.createEvent('HTMLEvents');
+        event.initEvent(type, true, true);
+        for (key in event_data) {
+          value = event_data[key];
+          event[key] = value;
+        }
+        return this.dispatchEvent(event);
       });
     };
 
