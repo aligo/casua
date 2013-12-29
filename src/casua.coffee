@@ -68,21 +68,21 @@ class casua.Node
     @
 
 casua.defineController = (methods) ->
-    _renderNode = (_root, template) ->
-      for node_meta, child of template
-        if node_meta.charAt(0) != '@'
-          node = new casua.Node node_meta
-          _root.append node
-          if typeof child is 'object'
-            _renderNode node, child
+  _renderNode = (_root, template) ->
+    for node_meta, child of template
+      if node_meta.charAt(0) != '@'
+        node = new casua.Node node_meta
+        _root.append node
+        if typeof child is 'object'
+          _renderNode node, child
 
-    class
-      constructor: (init_data) ->
+  class
+    constructor: (init_data) ->
 
-      render: (template) ->
-        fragment = new casua.Node document.createDocumentFragment()
-        _renderNode fragment, template
-        fragment
+    render: (template) ->
+      fragment = new casua.Node document.createDocumentFragment()
+      _renderNode fragment, template
+      fragment
 
 
 

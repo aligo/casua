@@ -13,10 +13,9 @@
     "bower_components",
     "test"
   ],
-  "dependencies": {
-    "jquery": ">= 2.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "jquery": ">= 2.0.0",
     "qunit": "~1.12.0"
   }
 }
