@@ -206,6 +206,38 @@ Released under the MIT license
 
   })();
 
+  casua.Model = (function() {
+    var __initProp;
+
+    __initProp = function(_model, prop, value) {
+      if (!(prop.charAt(0) === '_' || prop === 'length' || typeof value === 'function')) {
+        _model._props.push(prop);
+        return _model[prop] = value;
+      }
+    };
+
+    function Model(init_data) {
+      var prop, value, _i, _len;
+      this._props = [];
+      if (init_data.length) {
+        this.length = init_data.length;
+        for (prop = _i = 0, _len = init_data.length; _i < _len; prop = ++_i) {
+          value = init_data[prop];
+          prop = prop.toString();
+          __initProp(this, prop, value);
+        }
+      } else if (typeof init_data === 'object') {
+        for (prop in init_data) {
+          value = init_data[prop];
+          __initProp(this, prop, value);
+        }
+      }
+    }
+
+    return Model;
+
+  })();
+
   casua.defineController = function(fn) {
     var _renderNode;
     _renderNode = function(_controller, _root, template) {

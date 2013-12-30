@@ -69,7 +69,7 @@ test 'defineController', ->
       '.test2': ''
   equal container[0].innerHTML, '<div class="test"><div class="test2"></div></div>', 'ok'
 
-test 'define on', ->
+test 'CST @on', ->
   clicked = 0
   testController = casua.defineController ->
     clickOne: -> 
@@ -93,3 +93,19 @@ test 'define on', ->
   _trigger fragment1[0].children[0], 'click'
   equal clicked, 1, '@on click: clickOne'
 
+module 'Model'
+test 'Should can be create', ->
+  model1 = new casua.Model
+    test: 1
+  equal model1.test, 1, 'object model'
+
+test 'Should can watch change', ->
+  model1 = new casua.Model
+    test: 1
+  equal model1.test, 1, 'object model'
+
+
+test 'Should can act as a array', ->
+  array = new casua.Model [1, 2, 3]
+  equal array[1], 2, 'array model'
+  equal array.length, 3, 'array model length'

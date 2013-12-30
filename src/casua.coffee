@@ -123,6 +123,23 @@ class casua.Node
       event[key] = value for key, value of event_data
       @dispatchEvent event
 
+class casua.Model
+
+  __initProp = (_model, prop, value) ->
+    unless prop.charAt(0) == '_' || prop == 'length' || typeof value is 'function'
+      _model._props.push prop
+      _model[prop] = value
+
+  constructor: (init_data) ->
+    @_props = []
+    if init_data.length
+      @length = init_data.length
+      for value, prop in init_data
+        prop = prop.toString()
+        __initProp @, prop, value
+    else if typeof init_data is 'object'
+      __initProp @, prop, value for prop, value of init_data
+
 casua.defineController = (fn) ->
   _renderNode = (_controller, _root, template) ->
     for node_meta, child of template
@@ -146,7 +163,5 @@ casua.defineController = (fn) ->
       fragment = new casua.Node document.createDocumentFragment()
       _renderNode @, fragment, template
       fragment
-
-
 
 window.casua = casua
