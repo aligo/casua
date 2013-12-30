@@ -28,6 +28,7 @@ class casua.Node
     ret = for one, idx in _node
       callback.call one, idx, one
     ret[0]
+      
   __addEventListenerFn = if window.document.addEventListener
     (element, type, fn) -> element.addEventListener type, fn, false
   else
@@ -100,13 +101,13 @@ class casua.Node
     @
 
   empty: ->
+    _node = @
     _forEach @, ->
       while @firstChild
         @removeChild @firstChild
     @
 
   on: (type, fn) ->
-    _node = @
     @events[type] ||= []
     @events[type].push fn
     _forEach @, (idx) ->

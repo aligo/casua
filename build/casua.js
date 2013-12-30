@@ -159,6 +159,8 @@ Released under the MIT license
     };
 
     Node.prototype.empty = function() {
+      var _node;
+      _node = this;
       _forEach(this, function() {
         var _results;
         _results = [];
@@ -171,8 +173,7 @@ Released under the MIT license
     };
 
     Node.prototype.on = function(type, fn) {
-      var _base, _node;
-      _node = this;
+      var _base;
       (_base = this.events)[type] || (_base[type] = []);
       this.events[type].push(fn);
       return _forEach(this, function(idx) {
