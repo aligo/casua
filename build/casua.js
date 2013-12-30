@@ -207,32 +207,100 @@ Released under the MIT license
   })();
 
   casua.Model = (function() {
-    var __initProp;
+    var __forProps, __initProp, __watchProp, _models, _props_blacklist, _watchLoop, _watchModel;
 
-    __initProp = function(_model, prop, value) {
-      if (!(prop.charAt(0) === '_' || prop === 'length' || typeof value === 'function')) {
-        _model._props.push(prop);
-        return _model[prop] = value;
+    _props_blacklist = /^(?:length)$/;
+
+    _models = [];
+
+    _watchLoop = function() {
+      var i, _i, _len, _model, _results;
+      _results = [];
+      for (i = _i = 0, _len = _models.length; _i < _len; i = ++_i) {
+        _model = _models[i];
+        _results.push(_watchModel(_model));
       }
+      return _results;
     };
 
-    function Model(init_data) {
-      var prop, value, _i, _len;
-      this._props = [];
+    _watchModel = function(_model) {
+      var i, prop, _i, _len, _ref;
+      _ref = _model._props;
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        prop = _ref[i];
+        if (_model[prop] != null) {
+          __watchProp(_model, prop);
+        } else {
+          delete _models._olds[prop];
+          _models.props.splice(i, 1);
+        }
+      }
+      return __forProps(_model);
+    };
+
+    __forProps = function(_model, init_data) {
+      var prop, value, _i, _len, _results, _results1;
+      init_data || (init_data = _model);
       if (init_data.length) {
-        this.length = init_data.length;
+        _model.length = init_data.length;
+        _results = [];
         for (prop = _i = 0, _len = init_data.length; _i < _len; prop = ++_i) {
           value = init_data[prop];
           prop = prop.toString();
-          __initProp(this, prop, value);
+          _results.push(__initProp(_model, prop, value));
         }
-      } else if (typeof init_data === 'object') {
+        return _results;
+      } else if (typeof _model === 'object') {
+        _results1 = [];
         for (prop in init_data) {
           value = init_data[prop];
-          __initProp(this, prop, value);
+          _results1.push(__initProp(_model, prop, value));
         }
+        return _results1;
+      }
+    };
+
+    __initProp = function(_model, prop, value) {
+      if (!(prop.charAt(0) === '$' || typeof value === 'function' || _model._props.indexOf(prop) !== -1)) {
+        _model._props.push(prop);
+        _model[prop] = value;
+        return __watchProp(_model, prop);
+      }
+    };
+
+    __watchProp = function(_model, prop) {
+      var fn, _i, _len, _ref;
+      if (_model[prop] !== _model._olds[prop]) {
+        if (_model._watchs[prop]) {
+          _ref = _model._watchs[prop];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            fn = _ref[_i];
+            fn.call(_model, _model[prop], _model._olds[prop]);
+          }
+        }
+        return _model._olds[prop] = _model[prop];
+      }
+    };
+
+    setInterval(_watchLoop, 50);
+
+    function Model(init_data) {
+      _models.push(this);
+      this._props = [];
+      this._olds = {};
+      this._watchs = {};
+      if (init_data instanceof casua.Model) {
+        return init_data;
+      } else {
+        __forProps(this, init_data);
       }
     }
+
+    Model.prototype.$watch = function(prop, fn) {
+      var _base;
+      (_base = this._watchs)[prop] || (_base[prop] = []);
+      return this._watchs[prop].push(fn);
+    };
 
     return Model;
 

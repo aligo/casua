@@ -125,20 +125,59 @@ class casua.Node
 
 class casua.Model
 
-  __initProp = (_model, prop, value) ->
-    unless prop.charAt(0) == '_' || prop == 'length' || typeof value is 'function'
-      _model._props.push prop
-      _model[prop] = value
+  _props_blacklist = /^(?:length)$/
 
-  constructor: (init_data) ->
-    @_props = []
+  _models = []
+
+  _watchLoop = -> _watchModel _model for _model, i in _models
+
+  _watchModel = (_model) ->
+    #watch old prop
+    for prop, i in _model._props
+      if _model[prop]?
+        __watchProp _model, prop
+      else
+        delete _models._olds[prop]
+        _models.props.splice i, 1
+    __forProps _model
+
+  __forProps = (_model, init_data) ->
+    init_data ||= _model
     if init_data.length
-      @length = init_data.length
+      _model.length = init_data.length
       for value, prop in init_data
         prop = prop.toString()
-        __initProp @, prop, value
-    else if typeof init_data is 'object'
-      __initProp @, prop, value for prop, value of init_data
+        __initProp _model, prop, value
+    else if typeof _model is 'object'
+      __initProp _model, prop, value for prop, value of init_data
+
+  __initProp = (_model, prop, value) ->
+    unless prop.charAt(0) == '$' || typeof value is 'function' || _model._props.indexOf(prop) != -1
+      _model._props.push prop
+      _model[prop] = value
+      __watchProp _model, prop
+
+  __watchProp = (_model, prop) ->
+    if _model[prop] != _model._olds[prop]
+      if _model._watchs[prop]
+        fn.call _model, _model[prop], _model._olds[prop] for fn in _model._watchs[prop]
+      _model._olds[prop] = _model[prop]
+
+  setInterval _watchLoop, 50
+
+  constructor: (init_data) ->
+    _models.push @
+    @_props = []
+    @_olds = {}
+    @_watchs = {}
+    if init_data instanceof casua.Model
+      return init_data
+    else
+      __forProps @, init_data
+
+  $watch: (prop, fn) ->
+    @_watchs[prop] ||= []
+    @_watchs[prop].push fn
 
 casua.defineController = (fn) ->
   _renderNode = (_controller, _root, template) ->
