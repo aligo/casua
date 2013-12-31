@@ -43,6 +43,13 @@ test 'Should can empty()', ->
   node[0].innerHTML = 'xxxx'
   equal node.empty()[0].innerHTML, '', 'empty'
 
+test 'Should can html()', ->
+  node = new casua.Node '.box'
+  node.append '<a></a>'
+  equal node.html(), '<a></a>', 'get'
+  node.html('<div class="test"></div>')
+  equal node.html(), '<div class="test"></div>', 'set'
+
 test 'Should can on()', ->
   clicked = 0
   node = new casua.Node 'a'

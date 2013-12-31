@@ -78,25 +78,28 @@ class casua.Node
         if r = tag_data.match /#([^\.^#]+)/
           el.id = r[1]
         _addNodes @, el
-      for attr in attrs_data
-        if r = attr.match /^([^=]+)(?:=(['"])(.+?)\2)?$/
-          @attr r[1], ( r[3] || '' )
+        for attr in attrs_data
+          if r = attr.match /^([^=]+)(?:=(['"])(.+?)\2)?$/
+            @attr r[1], ( r[3] || '' )
+      else
+        div = document.createElement 'div'
+        div.innerHTML = '<div>&#160;</div>' + node_meta
+        div.removeChild div.firstChild
+        for child in div.childNodes
+          _addNodes @, child
     else if node_meta.nodeName
       _addNodes @, node_meta
 
   attr: (name, value) ->
-    ret = _forEach @, ->
-      name = name.toLowerCase()
-      if value?
-        @setAttribute name, value
-      else
-        @getAttribute name, 2
+    name = name.toLowerCase()
     if value?
+      _forEach @, -> @setAttribute name, value
       @
     else
-      ret
+      @[0].getAttribute name, 2
     
   append: (node) ->
+    node = new casua.Node node if typeof node is 'string'
     _forEach @, (i, parent) -> _forEach node, (j, child) -> parent.appendChild child
     @
 
@@ -105,6 +108,14 @@ class casua.Node
       while @firstChild
         @removeChild @firstChild
     @
+
+  html: (value) ->
+    if value?
+      @empty()
+      _forEach @, -> @innerHTML = value
+      @
+    else
+      @[0].innerHTML
 
   on: (type, fn) ->
     _node = @
@@ -116,6 +127,7 @@ class casua.Node
       if handleds.indexOf(type) == -1
         __addEventListenerFn @, type, handler
         handleds.push type
+    @
 
   trigger: (type, event_data = {}) ->
     _forEach @, ->
@@ -123,17 +135,15 @@ class casua.Node
       event.initEvent type, true, true
       event[key] = value for key, value of event_data
       @dispatchEvent event
+    @
 
 class casua.Model
-
-  # _props_blacklist = /^(?:length)$/
 
   _models = []
 
   _watchLoop = -> _watchModel _model for _model, i in _models
 
   _watchModel = (_model) ->
-    #watch old prop
     for prop, i in _model._props
       if _model[prop]?
         __watchProp _model, prop

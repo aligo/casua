@@ -102,7 +102,7 @@ Released under the MIT license
     };
 
     function Node(node_meta) {
-      var attr, attrs_data, el, r, tag_data, _i, _len;
+      var attr, attrs_data, child, div, el, r, tag_data, _i, _j, _len, _len1, _ref;
       this.handlers = {};
       this.events = {};
       this.length = 0;
@@ -120,11 +120,20 @@ Released under the MIT license
             el.id = r[1];
           }
           _addNodes(this, el);
-        }
-        for (_i = 0, _len = attrs_data.length; _i < _len; _i++) {
-          attr = attrs_data[_i];
-          if (r = attr.match(/^([^=]+)(?:=(['"])(.+?)\2)?$/)) {
-            this.attr(r[1], r[3] || '');
+          for (_i = 0, _len = attrs_data.length; _i < _len; _i++) {
+            attr = attrs_data[_i];
+            if (r = attr.match(/^([^=]+)(?:=(['"])(.+?)\2)?$/)) {
+              this.attr(r[1], r[3] || '');
+            }
+          }
+        } else {
+          div = document.createElement('div');
+          div.innerHTML = '<div>&#160;</div>' + node_meta;
+          div.removeChild(div.firstChild);
+          _ref = div.childNodes;
+          for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+            child = _ref[_j];
+            _addNodes(this, child);
           }
         }
       } else if (node_meta.nodeName) {
@@ -133,23 +142,21 @@ Released under the MIT license
     }
 
     Node.prototype.attr = function(name, value) {
-      var ret;
-      ret = _forEach(this, function() {
-        name = name.toLowerCase();
-        if (value != null) {
-          return this.setAttribute(name, value);
-        } else {
-          return this.getAttribute(name, 2);
-        }
-      });
+      name = name.toLowerCase();
       if (value != null) {
+        _forEach(this, function() {
+          return this.setAttribute(name, value);
+        });
         return this;
       } else {
-        return ret;
+        return this[0].getAttribute(name, 2);
       }
     };
 
     Node.prototype.append = function(node) {
+      if (typeof node === 'string') {
+        node = new casua.Node(node);
+      }
       _forEach(this, function(i, parent) {
         return _forEach(node, function(j, child) {
           return parent.appendChild(child);
@@ -170,12 +177,24 @@ Released under the MIT license
       return this;
     };
 
+    Node.prototype.html = function(value) {
+      if (value != null) {
+        this.empty();
+        _forEach(this, function() {
+          return this.innerHTML = value;
+        });
+        return this;
+      } else {
+        return this[0].innerHTML;
+      }
+    };
+
     Node.prototype.on = function(type, fn) {
       var _base, _node;
       _node = this;
       (_base = this.events)[type] || (_base[type] = []);
       this.events[type].push(fn);
-      return _forEach(this, function(idx) {
+      _forEach(this, function(idx) {
         var handleds, handler, _base1;
         handler = (_base1 = _node.handlers)[idx] || (_base1[idx] = __createEventHanlder(this, _node.events));
         handleds = handler.handleds;
@@ -184,13 +203,14 @@ Released under the MIT license
           return handleds.push(type);
         }
       });
+      return this;
     };
 
     Node.prototype.trigger = function(type, event_data) {
       if (event_data == null) {
         event_data = {};
       }
-      return _forEach(this, function() {
+      _forEach(this, function() {
         var event, key, value;
         event = document.createEvent('HTMLEvents');
         event.initEvent(type, true, true);
@@ -200,6 +220,7 @@ Released under the MIT license
         }
         return this.dispatchEvent(event);
       });
+      return this;
     };
 
     return Node;
