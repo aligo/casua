@@ -159,8 +159,6 @@ Released under the MIT license
     };
 
     Node.prototype.empty = function() {
-      var _node;
-      _node = this;
       _forEach(this, function() {
         var _results;
         _results = [];
@@ -173,7 +171,8 @@ Released under the MIT license
     };
 
     Node.prototype.on = function(type, fn) {
-      var _base;
+      var _base, _node;
+      _node = this;
       (_base = this.events)[type] || (_base[type] = []);
       this.events[type].push(fn);
       return _forEach(this, function(idx) {
@@ -208,9 +207,7 @@ Released under the MIT license
   })();
 
   casua.Model = (function() {
-    var __forProps, __initProp, __watchProp, _models, _props_blacklist, _watchLoop, _watchModel;
-
-    _props_blacklist = /^(?:length)$/;
+    var __callWatchs, __defineArrayMethods, __forProps, __initProp, __watchProp, _arrayMethods, _models, _watchLoop, _watchModel;
 
     _models = [];
 
@@ -232,8 +229,8 @@ Released under the MIT license
         if (_model[prop] != null) {
           __watchProp(_model, prop);
         } else {
-          delete _models._olds[prop];
-          _models.props.splice(i, 1);
+          delete _model._olds[prop];
+          _model._props.splice(i, 1);
         }
       }
       return __forProps(_model);
@@ -243,7 +240,6 @@ Released under the MIT license
       var prop, value, _i, _len, _results, _results1;
       init_data || (init_data = _model);
       if (init_data.length) {
-        _model.length = init_data.length;
         _results = [];
         for (prop = _i = 0, _len = init_data.length; _i < _len; prop = ++_i) {
           value = init_data[prop];
@@ -262,7 +258,7 @@ Released under the MIT license
     };
 
     __initProp = function(_model, prop, value) {
-      if (!(prop.charAt(0) === '$' || typeof value === 'function' || _model._props.indexOf(prop) !== -1)) {
+      if (!(prop.charAt(0) === '$' || typeof value === 'function' || _model._props.indexOf(prop) !== -1 || _model._props_blacklist.indexOf(prop) !== -1)) {
         _model._props.push(prop);
         _model[prop] = value;
         return __watchProp(_model, prop);
@@ -270,17 +266,66 @@ Released under the MIT license
     };
 
     __watchProp = function(_model, prop) {
-      var fn, _i, _len, _ref;
       if (_model[prop] !== _model._olds[prop]) {
-        if (_model._watchs[prop]) {
-          _ref = _model._watchs[prop];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            fn = _ref[_i];
-            fn.call(_model, _model[prop], _model._olds[prop]);
-          }
-        }
+        __callWatchs(_model, prop, _model[prop], _model._olds[prop]);
         return _model._olds[prop] = _model[prop];
       }
+    };
+
+    __callWatchs = function(_model, prop, new_val, old_val) {
+      var fn, _i, _len, _ref, _results;
+      if (_model._watchs[prop]) {
+        _ref = _model._watchs[prop];
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          fn = _ref[_i];
+          _results.push(fn.call(_model, new_val, old_val));
+        }
+        return _results;
+      }
+    };
+
+    _arrayMethods = ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift'];
+
+    __defineArrayMethods = function(_model) {
+      var method, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = _arrayMethods.length; _i < _len; _i++) {
+        method = _arrayMethods[_i];
+        _results.push((function(method) {
+          return _model[method] = function() {
+            var i, j, old, one, _array, _j, _k, _len1, _ref;
+            _array = (function() {
+              var _j, _len1, _results1;
+              _results1 = [];
+              for (_j = 0, _len1 = _model.length; _j < _len1; _j++) {
+                one = _model[_j];
+                _results1.push(one);
+              }
+              return _results1;
+            })();
+            _array[method].apply(_array, arguments);
+            i = 0;
+            for (i = _j = 0, _len1 = _array.length; _j < _len1; i = ++_j) {
+              one = _array[i];
+              _model[i] = one;
+              if (i >= _model.length) {
+                __callWatchs(_model, '$add', i, one);
+              }
+            }
+            if (i < _model.length) {
+              for (j = _k = i, _ref = _model.length - 1; i <= _ref ? _k <= _ref : _k >= _ref; j = i <= _ref ? ++_k : --_k) {
+                old = _model[j];
+                delete _model[j];
+                __callWatchs(_model, '$delete', j, old);
+              }
+            }
+            _model.length = _array.length;
+            return _watchModel(_model);
+          };
+        })(method));
+      }
+      return _results;
     };
 
     setInterval(_watchLoop, 50);
@@ -290,9 +335,16 @@ Released under the MIT license
       this._props = [];
       this._olds = {};
       this._watchs = {};
+      this._props_blacklist = [];
       if (init_data instanceof casua.Model) {
         return init_data;
       } else {
+        if (init_data.length) {
+          this.length = init_data.length;
+          this._props_blacklist = _arrayMethods;
+          __defineArrayMethods(this);
+          __initProp(this, 'length', this.length);
+        }
         __forProps(this, init_data);
       }
     }

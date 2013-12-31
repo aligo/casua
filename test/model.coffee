@@ -36,7 +36,40 @@ test 'Should can watch change', ->
   ), 60
 
 test 'Should can act as a array', ->
+  watched = 0
+  watched_adds = []
+  watched_deletes = []
   array = new casua.Model [1, 2, 3]
   equal array[1], 2, 'array model'
   equal array.length, 3, 'array model length'
-  
+  array.$watch 1, (n, o) ->
+    watched += n
+  array.$watch 3, (n, o) ->
+    watched += 1
+  array.$watch '$add', (idx, one) ->
+    watched_adds.push
+      idx: idx
+      one: one
+  array.$watch '$delete', (idx, one) ->
+    watched_deletes.push
+      idx: idx
+      one: one
+  array[1] = 9
+  array.push 'x'
+  equal array.length, 4, 'array model push'
+  equal array[3], 'x', 'array model push'
+  stop()
+  setTimeout ( ->
+    equal watched, 10, 'can watch array'
+    equal watched_adds[(watched_adds.length - 1)].idx, 3, 'can watch $add'
+    equal watched_adds[(watched_adds.length - 1)].one, 'x', 'can watch $add'
+    array.pop()
+    equal array[2], 3, 'array model pop'
+    equal array.length, 3, 'array model pop'
+    setTimeout ( ->
+      equal watched_deletes[(watched_deletes.length - 1)].idx, 3, 'can watch $delete'
+      equal watched_deletes[(watched_deletes.length - 1)].one, 'x', 'can watch $delete'
+      start()
+    ), 60
+  ), 60
+

@@ -101,13 +101,13 @@ class casua.Node
     @
 
   empty: ->
-    _node = @
     _forEach @, ->
       while @firstChild
         @removeChild @firstChild
     @
 
   on: (type, fn) ->
+    _node = @
     @events[type] ||= []
     @events[type].push fn
     _forEach @, (idx) ->
@@ -126,7 +126,7 @@ class casua.Node
 
 class casua.Model
 
-  _props_blacklist = /^(?:length)$/
+  # _props_blacklist = /^(?:length)$/
 
   _models = []
 
@@ -138,14 +138,13 @@ class casua.Model
       if _model[prop]?
         __watchProp _model, prop
       else
-        delete _models._olds[prop]
-        _models.props.splice i, 1
+        delete _model._olds[prop]
+        _model._props.splice i, 1
     __forProps _model
 
   __forProps = (_model, init_data) ->
     init_data ||= _model
     if init_data.length
-      _model.length = init_data.length
       for value, prop in init_data
         prop = prop.toString()
         __initProp _model, prop, value
@@ -153,16 +152,41 @@ class casua.Model
       __initProp _model, prop, value for prop, value of init_data
 
   __initProp = (_model, prop, value) ->
-    unless prop.charAt(0) == '$' || typeof value is 'function' || _model._props.indexOf(prop) != -1
+    unless prop.charAt(0) == '$' || typeof value is 'function' || _model._props.indexOf(prop) != -1 || _model._props_blacklist.indexOf(prop) != -1
       _model._props.push prop
       _model[prop] = value
       __watchProp _model, prop
 
   __watchProp = (_model, prop) ->
     if _model[prop] != _model._olds[prop]
-      if _model._watchs[prop]
-        fn.call _model, _model[prop], _model._olds[prop] for fn in _model._watchs[prop]
+      __callWatchs _model, prop, _model[prop], _model._olds[prop]
       _model._olds[prop] = _model[prop]
+
+  __callWatchs = (_model, prop, new_val, old_val) ->
+    if _model._watchs[prop]
+      fn.call _model, new_val, old_val for fn in _model._watchs[prop]
+
+  _arrayMethods = ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift']
+  __defineArrayMethods = (_model) ->
+    for method in _arrayMethods
+      ( (method) ->
+        _model[method] = ->
+          _array = for one in _model
+            one
+          _array[method].apply _array, arguments
+          i = 0
+          for one, i in _array
+            _model[i] = one
+            if i >= _model.length
+              __callWatchs _model, '$add', i, one
+          if i < _model.length
+            for j in [i..(_model.length - 1)]
+              old = _model[j]
+              delete _model[j]
+              __callWatchs _model, '$delete', j, old
+          _model.length = _array.length
+          _watchModel _model
+      )(method)
 
   setInterval _watchLoop, 50
 
@@ -171,9 +195,15 @@ class casua.Model
     @_props = []
     @_olds = {}
     @_watchs = {}
+    @_props_blacklist = []
     if init_data instanceof casua.Model
       return init_data
     else
+      if init_data.length
+        @length = init_data.length
+        @_props_blacklist = _arrayMethods
+        __defineArrayMethods @
+        __initProp @, 'length', @length
       __forProps @, init_data
 
   $watch: (prop, fn) ->
