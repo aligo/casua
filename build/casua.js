@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, _shallowCopy;
+  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _shallowCopy;
 
   _shallowCopy = function(src, dst) {
     var key, value;
@@ -20,6 +20,27 @@ Released under the MIT license
       dst[key] = value;
     }
     return dst;
+  };
+
+  _escape_chars = {
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    amp: '&',
+    apos: "'"
+  };
+
+  _reversed_escape_chars = {};
+
+  for (k in _escape_chars) {
+    v = _escape_chars[k];
+    _reversed_escape_chars[v] = k;
+  }
+
+  _escapeHTML = function(str) {
+    return str.replace(/[&<>"']/g, function(m) {
+      return '&' + _reversed_escape_chars[m] + ';';
+    });
   };
 
   casua = {};
@@ -186,6 +207,14 @@ Released under the MIT license
         return this;
       } else {
         return this[0].innerHTML;
+      }
+    };
+
+    Node.prototype.text = function(value) {
+      if (value != null) {
+        return this.html(_escapeHTML(value));
+      } else {
+        return this.html();
       }
     };
 

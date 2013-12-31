@@ -11,6 +11,13 @@ _shallowCopy = (src, dst = {}) ->
   dst[key] = value for key, value of src
   dst
 
+_escape_chars = { lt: '<', gt: '>', quot: '"', amp: '&', apos: "'" }
+_reversed_escape_chars = {}
+_reversed_escape_chars[v] = k for k, v of _escape_chars 
+_escapeHTML = (str) ->
+  str.replace /[&<>"']/g, (m) ->
+    '&' + _reversed_escape_chars[m] + ';'
+
 casua = {}
 
 class casua.Node
@@ -116,6 +123,12 @@ class casua.Node
       @
     else
       @[0].innerHTML
+
+  text: (value) ->
+    if value?
+      @html _escapeHTML(value)
+    else
+      @html()
 
   on: (type, fn) ->
     _node = @

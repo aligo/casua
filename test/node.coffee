@@ -50,6 +50,11 @@ test 'Should can html()', ->
   node.html('<div class="test"></div>')
   equal node.html(), '<div class="test"></div>', 'set'
 
+test 'Should can text()', ->
+  node = new casua.Node '.box'
+  node.text('<div class="test"></div>')
+  equal node.html(), '&lt;div class=\"test\"&gt;&lt;/div&gt;', 'set'
+
 test 'Should can on()', ->
   clicked = 0
   node = new casua.Node 'a'
