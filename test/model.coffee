@@ -73,3 +73,31 @@ test 'Should can act as a array', ->
     ), 60
   ), 60
 
+test 'Should can create multiple-levels model', ->
+  root = new casua.Model
+    child1:
+      array: [1, 2, 3]
+    child2:
+      ok: false
+  equal ( root.child1 instanceof casua.Model ), true, 'child1 is a model'
+  equal ( root.child1.array instanceof casua.Model ), true, 'child1.array is a model'
+  equal ( root.child2 instanceof casua.Model ), true, 'child2 is a model'
+  watched_delete = false
+  root.child1.array.$watch '$delete', (idx, one) ->
+    watched_delete = true
+  equal root.child1.array.shift(), 1, 'child1.array shift()'
+  equal root.child1.array.length, 2, 'child1.array shift()'
+
+  watched_child2 = 0
+  root.child2.$watch 'ok', (n, o)->
+    watched_child2 += n
+  root.child2.$watch 'add', (n, o)->
+    watched_child2 += n
+  root.child2.ok = 1
+  root.child2.add = 7
+  stop()
+  setTimeout ( ->
+    equal watched_delete, true, 'child1.array can watch'
+    equal watched_child2, 8, 'child2 can watch'
+    start()
+  ), 60

@@ -229,6 +229,7 @@ Released under the MIT license
         if (_model[prop] != null) {
           __watchProp(_model, prop);
         } else {
+          __callWatchs(_model, '$delete', prop, _model._olds[prop]);
           delete _model._olds[prop];
           _model._props.splice(i, 1);
         }
@@ -258,9 +259,13 @@ Released under the MIT license
     };
 
     __initProp = function(_model, prop, value) {
-      if (!(prop.charAt(0) === '$' || typeof value === 'function' || _model._props.indexOf(prop) !== -1 || _model._props_blacklist.indexOf(prop) !== -1)) {
+      if (!(prop.charAt(0) === '_' || typeof value === 'function' || _model._props.indexOf(prop) !== -1 || _model._props_blacklist.indexOf(prop) !== -1)) {
+        if (typeof value === 'object') {
+          value = new casua.Model(value);
+        }
         _model._props.push(prop);
         _model[prop] = value;
+        __callWatchs(_model, '$add', prop, value);
         return __watchProp(_model, prop);
       }
     };
@@ -294,7 +299,7 @@ Released under the MIT license
         method = _arrayMethods[_i];
         _results.push((function(method) {
           return _model[method] = function() {
-            var i, j, old, one, _array, _j, _k, _len1, _ref;
+            var i, j, one, ret, _array, _j, _k, _len1, _ref;
             _array = (function() {
               var _j, _len1, _results1;
               _results1 = [];
@@ -304,24 +309,20 @@ Released under the MIT license
               }
               return _results1;
             })();
-            _array[method].apply(_array, arguments);
+            ret = _array[method].apply(_array, arguments);
             i = 0;
             for (i = _j = 0, _len1 = _array.length; _j < _len1; i = ++_j) {
               one = _array[i];
               _model[i] = one;
-              if (i >= _model.length) {
-                __callWatchs(_model, '$add', i, one);
-              }
             }
             if (i < _model.length) {
               for (j = _k = i, _ref = _model.length - 1; i <= _ref ? _k <= _ref : _k >= _ref; j = i <= _ref ? ++_k : --_k) {
-                old = _model[j];
                 delete _model[j];
-                __callWatchs(_model, '$delete', j, old);
               }
             }
             _model.length = _array.length;
-            return _watchModel(_model);
+            _watchModel(_model);
+            return ret;
           };
         })(method));
       }

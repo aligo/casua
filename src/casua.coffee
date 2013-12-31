@@ -138,6 +138,7 @@ class casua.Model
       if _model[prop]?
         __watchProp _model, prop
       else
+        __callWatchs _model, '$delete', prop, _model._olds[prop]
         delete _model._olds[prop]
         _model._props.splice i, 1
     __forProps _model
@@ -152,9 +153,12 @@ class casua.Model
       __initProp _model, prop, value for prop, value of init_data
 
   __initProp = (_model, prop, value) ->
-    unless prop.charAt(0) == '$' || typeof value is 'function' || _model._props.indexOf(prop) != -1 || _model._props_blacklist.indexOf(prop) != -1
+    unless prop.charAt(0) == '_' || typeof value is 'function' || _model._props.indexOf(prop) != -1 || _model._props_blacklist.indexOf(prop) != -1
+      if typeof value is 'object'
+        value = new casua.Model value
       _model._props.push prop
       _model[prop] = value
+      __callWatchs _model, '$add', prop, value
       __watchProp _model, prop
 
   __watchProp = (_model, prop) ->
@@ -173,19 +177,14 @@ class casua.Model
         _model[method] = ->
           _array = for one in _model
             one
-          _array[method].apply _array, arguments
+          ret = _array[method].apply _array, arguments
           i = 0
-          for one, i in _array
-            _model[i] = one
-            if i >= _model.length
-              __callWatchs _model, '$add', i, one
+          _model[i] = one for one, i in _array
           if i < _model.length
-            for j in [i..(_model.length - 1)]
-              old = _model[j]
-              delete _model[j]
-              __callWatchs _model, '$delete', j, old
+            delete _model[j] for j in [i..(_model.length - 1)]
           _model.length = _array.length
           _watchModel _model
+          ret
       )(method)
 
   setInterval _watchLoop, 50
