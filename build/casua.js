@@ -8,7 +8,9 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _shallowCopy;
+  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeInitParent, _shallowCopy,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   _shallowCopy = function(src, dst) {
     var key, value;
@@ -256,27 +258,30 @@ Released under the MIT license
 
   })();
 
+  _scopeInitParent = function(_scope, _parent) {
+    _scope._childs = [];
+    if (_parent != null) {
+      if (_parent._childs.indexOf(_scope) === -1) {
+        _parent._childs.push(_scope);
+      }
+      return _scope._parent = _parent;
+    }
+  };
+
   casua.Scope = (function() {
     function Scope(init_data, parent) {
       var key, value;
       if (init_data instanceof casua.Scope) {
         return init_data;
-      } else if (init_data.length) {
+      } else if (init_data.length != null) {
         return new casua.ArrayScope(init_data, parent);
       } else {
-        if (parent != null) {
-          if (parent._childs.indexOf(this) === -1) {
-            parent._childs.push(this);
-          }
-          this._parent = parent;
-        }
+        _scopeInitParent(this, parent);
+        this._olds = {};
         this._data = {};
-        this._childs = [];
         for (key in init_data) {
           value = init_data[key];
-          if (typeof value !== 'function') {
-            this.set(key, value);
-          }
+          this.set(key, value);
         }
       }
     }
@@ -312,6 +317,64 @@ Released under the MIT license
     return Scope;
 
   })();
+
+  casua.ArrayScope = (function(_super) {
+    var method, _fn, _i, _len, _ref;
+
+    __extends(ArrayScope, _super);
+
+    _ref = ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift'];
+    _fn = function(method) {
+      return ArrayScope.prototype[method] = function() {
+        var idx, one, ret, value, _array, _j, _len1;
+        _array = (function() {
+          var _j, _len1, _ref1, _results;
+          _ref1 = this._data;
+          _results = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            one = _ref1[_j];
+            _results.push(one);
+          }
+          return _results;
+        }).call(this);
+        ret = _array[method].apply(_array, arguments);
+        this._data = [];
+        for (idx = _j = 0, _len1 = _array.length; _j < _len1; idx = ++_j) {
+          value = _array[idx];
+          this.set(idx, value);
+        }
+        return ret;
+      };
+    };
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      method = _ref[_i];
+      _fn(method);
+    }
+
+    function ArrayScope(init_data, parent) {
+      var idx, value, _j, _len1;
+      if (init_data instanceof casua.Scope) {
+        return init_data;
+      } else if (init_data.length == null) {
+        return new casua.Scope(init_data, parent);
+      } else {
+        _scopeInitParent(this, parent);
+        this._olds = [];
+        this._data = [];
+        for (idx = _j = 0, _len1 = init_data.length; _j < _len1; idx = ++_j) {
+          value = init_data[idx];
+          this.set(idx, value);
+        }
+      }
+    }
+
+    ArrayScope.prototype.length = function() {
+      return this._data.length;
+    };
+
+    return ArrayScope;
+
+  })(casua.Scope);
 
   casua.defineController = function(fn) {
     var _computeBind, _renderNode;

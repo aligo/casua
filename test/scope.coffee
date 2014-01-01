@@ -1,5 +1,5 @@
 module 'Scope'
-test 'Should can be create', ->
+test 'Should can be created', ->
   scope = new casua.Scope
     test: 1
   equal scope.get('test'), 1, 'get()'
@@ -31,4 +31,19 @@ test 'Should can handle mutitple-levels scope', ->
   equal scope._childs.length, 2, 'scope has two childs'
   scope.remove('to_remove')
   equal scope._childs.length, 1, 'to_remove has been remove & release'
-  
+
+test 'Should can be created to ArrayScope', ->
+  scope = new casua.Scope [1, 2, 3]
+  equal (scope instanceof casua.ArrayScope), true, 'is a instance of casua.ArrayScope'
+  equal (scope instanceof casua.Scope), true, 'is a instance of casua.Scope'
+  equal scope.length(), 3, 'array length()'
+  equal scope.get(0), 1, 'array get()'
+  scope.set 2, 4
+  equal scope.get(2), 4, 'array set()'
+
+  scope.push 'x'
+  equal scope.length(), 4, 'array push()'
+  equal scope.get(3), 'x', 'array push()'
+
+  equal scope.pop(), 'x', 'array pop()'
+  equal scope.length(), 3, 'array pop()'

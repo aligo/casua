@@ -150,22 +150,24 @@ class casua.Node
       @dispatchEvent event
     @
 
+_scopeInitParent = (_scope, _parent) ->
+  _scope._childs = []
+  if _parent?
+    _parent._childs.push _scope if _parent._childs.indexOf(_scope) == -1
+    _scope._parent = _parent
+
 class casua.Scope
 
   constructor: (init_data, parent) ->
     if init_data instanceof casua.Scope
       return init_data
-    else if init_data.length
+    else if init_data.length?
       return new casua.ArrayScope init_data, parent
     else
-      if parent?
-        parent._childs.push @ if parent._childs.indexOf(@) == -1
-        @_parent = parent
+      _scopeInitParent @, parent
+      @_olds = {}
       @_data = {}
-      @_childs = []
-      for key, value of init_data
-        unless typeof value is 'function'
-          @set key, value
+      @set key, value for key, value of init_data
 
   get: (key) ->
     ret = @_data[key]
@@ -184,6 +186,32 @@ class casua.Scope
         i = s._parent._childs.indexOf s
         s._parent._childs.splice i, 1
     delete @_data[key]
+
+class casua.ArrayScope extends casua.Scope
+
+  for method in ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift']
+    ( (method) ->
+      ArrayScope.prototype[method] = ->
+        _array = for one in @_data
+          one
+        ret = _array[method].apply _array, arguments
+        @_data = []
+        @set idx, value for value, idx in _array
+        ret
+    )(method)
+
+  constructor: (init_data, parent) ->
+    if init_data instanceof casua.Scope
+      return init_data
+    else if not init_data.length?
+      return new casua.Scope init_data, parent
+    else
+      _scopeInitParent @, parent
+      @_olds = []
+      @_data = []
+      @set idx, value for value, idx in init_data
+
+  length: -> @_data.length
     
 casua.defineController = (fn) ->
   _renderNode = (_controller, _root, template) ->
