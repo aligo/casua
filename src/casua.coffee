@@ -195,10 +195,12 @@ class casua.Scope
       if typeof value is 'object'
         value = new casua.Scope value, @
       if @_data[key] != value
-        unless @_data[key]?
-          _scopeCallWatch @, value, key, '$add', false
-        _scopeCallWatch @, value, @_data[key], key
+        old = @_data[key]
         @_data[key] = value
+        unless old?
+          _scopeCallWatch @, value, key, '$add', false
+        _scopeCallWatch @, value, old, key
+        
 
   remove: (key) ->
     _scopeRemovePrepare @, key
@@ -241,39 +243,56 @@ class casua.ArrayScope extends casua.Scope
     @_data.splice key, 1
      
 casua.defineController = (fn) ->
-  _renderNode = (_controller, _root, template) ->
+  _renderNode = (_controller, _scope, _root, template) ->
     for node_meta, child of template
       unless node_meta.charAt(0) == '@'
         node = new casua.Node node_meta
         _root.append node
         if typeof child is 'object'
-          _renderNode _controller, node, child
+          _renderNode _controller, _scope, node, child
       else
         if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\w+))?$/)
           switch r[1]
             when 'on'
               _root.on r[2], _controller.methods[child]
             when 'html', 'text'
-              value = _computeBind _controller, child
-              _root[r[1]].call _root, value
+              ( (_node, _method, _scope, src) ->
+                __computeBind _scope, src, (result) ->
+                  _node[_method].call _node, result
+              )(_root, r[1], _scope, child)
 
-  _computeBind = (_controller, src) ->
-    dst = src
-    binded_props = []
-    if r = src.match(/^@(\S+)$/)
-      dst = _controller.scope.get(r[1])
-      binded_props.push r[1]
-    dst
+  __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g
+  __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/
+
+  __computeBind = (_scope, src, fn) ->
+    keys_to_watch = []
+    watch_fn = if r = src.match(/^@(\S+)$/)
+      key = r[1]
+      keys_to_watch.push key
+      -> fn.call {}, @get(key)
+    else if r = src.match __compute_match_regexp
+      for part in r
+        part = part.match __compute_match_key_regexp
+        keys_to_watch.push part[1]
+      ->
+        scope = @
+        fn.call {}, src.replace __compute_match_regexp, (part) ->
+          part = part.match __compute_match_key_regexp
+          scope.get part[1]
+    else
+      -> fn.call {}, src
+    for key in keys_to_watch
+      _scope.$watch key, watch_fn
+    watch_fn.call _scope
 
   class
     constructor: (init_data) ->
-      # TODO: must handle controllers inside init_data, then replace them to own @scope first
-      @scope = new casua.Scope init_data # scope
-      @methods = fn.call @, @scope
+      @scope = new casua.Scope init_data
+      @methods = fn.call @, @scope, @
 
     render: (template) ->
       fragment = new casua.Node document.createDocumentFragment()
-      _renderNode @, fragment, template
+      _renderNode @, @scope, fragment, template
       fragment
 
 window.casua = casua

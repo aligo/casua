@@ -335,16 +335,18 @@ Released under the MIT license
     };
 
     Scope.prototype.set = function(key, value) {
+      var old;
       if (!(typeof key === 'string' && key.charAt(0) === '$')) {
         if (typeof value === 'object') {
           value = new casua.Scope(value, this);
         }
         if (this._data[key] !== value) {
-          if (this._data[key] == null) {
+          old = this._data[key];
+          this._data[key] = value;
+          if (old == null) {
             _scopeCallWatch(this, value, key, '$add', false);
           }
-          _scopeCallWatch(this, value, this._data[key], key);
-          return this._data[key] = value;
+          return _scopeCallWatch(this, value, old, key);
         }
       }
     };
@@ -431,9 +433,9 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(fn) {
-    var _computeBind, _renderNode;
-    _renderNode = function(_controller, _root, template) {
-      var child, node, node_meta, r, value, _results;
+    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, _renderNode;
+    _renderNode = function(_controller, _scope, _root, template) {
+      var child, node, node_meta, r, _results;
       _results = [];
       for (node_meta in template) {
         child = template[node_meta];
@@ -441,7 +443,7 @@ Released under the MIT license
           node = new casua.Node(node_meta);
           _root.append(node);
           if (typeof child === 'object') {
-            _results.push(_renderNode(_controller, node, child));
+            _results.push(_renderNode(_controller, _scope, node, child));
           } else {
             _results.push(void 0);
           }
@@ -453,8 +455,11 @@ Released under the MIT license
                 break;
               case 'html':
               case 'text':
-                value = _computeBind(_controller, child);
-                _results.push(_root[r[1]].call(_root, value));
+                _results.push((function(_node, _method, _scope, src) {
+                  return __computeBind(_scope, src, function(result) {
+                    return _node[_method].call(_node, result);
+                  });
+                })(_root, r[1], _scope, child));
                 break;
               default:
                 _results.push(void 0);
@@ -466,26 +471,55 @@ Released under the MIT license
       }
       return _results;
     };
-    _computeBind = function(_controller, src) {
-      var binded_props, dst, r;
-      dst = src;
-      binded_props = [];
-      if (r = src.match(/^@(\S+)$/)) {
-        dst = _controller.scope.get(r[1]);
-        binded_props.push(r[1]);
+    __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g;
+    __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/;
+    __computeBind = function(_scope, src, fn) {
+      var key, keys_to_watch, part, r, watch_fn, _i, _len;
+      keys_to_watch = [];
+      watch_fn = (function() {
+        var _i, _len;
+        if (r = src.match(/^@(\S+)$/)) {
+          key = r[1];
+          keys_to_watch.push(key);
+          return function() {
+            return fn.call({}, this.get(key));
+          };
+        } else if (r = src.match(__compute_match_regexp)) {
+          for (_i = 0, _len = r.length; _i < _len; _i++) {
+            part = r[_i];
+            part = part.match(__compute_match_key_regexp);
+            keys_to_watch.push(part[1]);
+          }
+          return function() {
+            var scope;
+            scope = this;
+            return fn.call({}, src.replace(__compute_match_regexp, function(part) {
+              part = part.match(__compute_match_key_regexp);
+              return scope.get(part[1]);
+            }));
+          };
+        } else {
+          return function() {
+            return fn.call({}, src);
+          };
+        }
+      })();
+      for (_i = 0, _len = keys_to_watch.length; _i < _len; _i++) {
+        key = keys_to_watch[_i];
+        _scope.$watch(key, watch_fn);
       }
-      return dst;
+      return watch_fn.call(_scope);
     };
     return (function() {
       function _Class(init_data) {
         this.scope = new casua.Scope(init_data);
-        this.methods = fn.call(this, this.scope);
+        this.methods = fn.call(this, this.scope, this);
       }
 
       _Class.prototype.render = function(template) {
         var fragment;
         fragment = new casua.Node(document.createDocumentFragment());
-        _renderNode(this, fragment, template);
+        _renderNode(this, this.scope, fragment, template);
         return fragment;
       };
 

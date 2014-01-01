@@ -37,7 +37,8 @@ test 'CST @on', ->
 test 'CST @html', ->
   testController = casua.defineController ->
   testCtrlInst = new testController
-    test: 'model value'
+    test: 'scope value'
+    test2: 'is good'
   fragment1 = testCtrlInst.render
     'h1':
       '@html': 'pure html'
@@ -45,4 +46,18 @@ test 'CST @html', ->
   fragment2 = testCtrlInst.render
     'h1':
       '@html': '@test'
-  equal fragment2[0].children[0].innerHTML, 'model value', 'model value'
+  equal fragment2[0].children[0].innerHTML, 'scope value', 'single binding'
+
+  fragment3 = testCtrlInst.render
+    'h1':
+      '@html': '{{test}} {{test2}}.'
+  equal fragment3[0].children[0].innerHTML, 'scope value is good.', 'computed binding'
+
+  scope = testCtrlInst.scope
+  scope.set 'test', 'changed'
+
+  equal fragment2[0].children[0].innerHTML, 'changed', 'scope value changed 1'
+  equal fragment3[0].children[0].innerHTML, 'changed is good.', 'scope value changed 2'
+
+  scope.set 'test2', 'is better'
+  equal fragment3[0].children[0].innerHTML, 'changed is better.', 'scope value changed 2'
