@@ -200,7 +200,6 @@ class casua.Scope
         unless old?
           _scopeCallWatch @, value, key, '$add', false
         _scopeCallWatch @, value, old, key
-        
 
   remove: (key) ->
     _scopeRemovePrepare @, key
@@ -250,16 +249,19 @@ casua.defineController = (fn) ->
         _root.append node
         if typeof child is 'object'
           _renderNode _controller, _scope, node, child
+        else
+          __nodeBind node, 'text', _scope, child
       else
         if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)
           switch r[1]
             when 'on'
               _root.on r[2], _controller.methods[child]
             when 'html', 'text'
-              ( (_node, _method, _scope, src) ->
-                __computeBind _scope, src, (result) ->
-                  _node[_method].call _node, result
-              )(_root, r[1], _scope, child)
+              __nodeBind _root, r[1], _scope, child
+
+  __nodeBind = (_node, _method, _scope, src) ->
+    __computeBind _scope, src, (result) ->
+      _node[_method].call _node, result
 
   __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g
   __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/

@@ -7,8 +7,8 @@ test 'defineController', ->
   testCtrlInst = new testController {}
   container.empty().append testCtrlInst.render
     '.test':
-      '.test2': ''
-  equal container[0].innerHTML, '<div class="test"><div class="test2"></div></div>', 'ok'
+      '.test2': '<test3>'
+  equal container[0].innerHTML, '<div class="test"><div class="test2">&lt;test3&gt;</div></div>', 'ok'
 
 test 'CST @on', ->
   clicked = 0
