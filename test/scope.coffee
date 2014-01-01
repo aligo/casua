@@ -53,6 +53,12 @@ test 'Should can be created to ArrayScope', ->
   equal scope.get(0), 2, 'array remove()'
   equal scope.get(1), 4, 'array remove()'
 
+  arr = []
+  scope.each (value, idx) ->
+    arr[idx] = value
+
+  deepEqual arr, scope._data, 'array each()'
+
 test 'Should can watch', ->
   changed = []
   watch_fn = (n, o, k) -> changed.push [n, o, k]

@@ -428,47 +428,76 @@ Released under the MIT license
       return this._data.splice(key, 1);
     };
 
+    ArrayScope.prototype.each = function(fn) {
+      var i, one, _j, _len1, _ref1, _results;
+      _ref1 = this._data;
+      _results = [];
+      for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
+        one = _ref1[i];
+        _results.push(fn.call(this, one, i));
+      }
+      return _results;
+    };
+
     return ArrayScope;
 
   })(casua.Scope);
 
   casua.defineController = function(fn) {
-    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, _renderNode;
+    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, _generateNodesAddFn, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
       var child, node, node_meta, r, _results;
-      _results = [];
-      for (node_meta in template) {
-        child = template[node_meta];
-        if (node_meta.charAt(0) !== '@') {
-          node = new casua.Node(node_meta);
-          _root.append(node);
-          if (typeof child === 'object') {
-            _results.push(_renderNode(_controller, _scope, node, child));
-          } else {
-            _results.push(__nodeBind(node, 'text', _scope, child));
-          }
-        } else {
-          if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
-            switch (r[1]) {
-              case 'on':
-                _results.push(_root.on(r[2], _controller.methods[child]));
-                break;
-              case 'html':
-              case 'text':
-                _results.push(__nodeBind(_root, r[1], _scope, child));
-                break;
-              case 'child':
-                _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
-                break;
-              default:
-                _results.push(void 0);
+      if (_scope instanceof casua.ArrayScope) {
+        return _renderNodes(_controller, _scope, _root, template);
+      } else {
+        _results = [];
+        for (node_meta in template) {
+          child = template[node_meta];
+          if (node_meta.charAt(0) !== '@') {
+            node = new casua.Node(node_meta);
+            _root.append(node);
+            if (typeof child === 'object') {
+              _renderNode(_controller, _scope, node, child);
+            } else {
+              __nodeBind(node, 'text', _scope, child);
             }
+            _results.push(node);
           } else {
-            _results.push(void 0);
+            if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
+              switch (r[1]) {
+                case 'on':
+                  _results.push(_root.on(r[2], _controller.methods[child]));
+                  break;
+                case 'html':
+                case 'text':
+                  _results.push(__nodeBind(_root, r[1], _scope, child));
+                  break;
+                case 'child':
+                  _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
+                  break;
+                default:
+                  _results.push(void 0);
+              }
+            } else {
+              _results.push(void 0);
+            }
           }
         }
+        return _results;
       }
-      return _results;
+    };
+    _renderNodes = function(_controller, _scope, _root, template) {
+      var add_fn;
+      add_fn = _generateNodesAddFn(_controller, _root, template);
+      _scope.$watch('$add', add_fn);
+      return _scope.each(function(one) {
+        return add_fn.call({}, one);
+      });
+    };
+    _generateNodesAddFn = function(_controller, _root, template) {
+      return function(new_scope) {
+        return _renderNode(_controller, new_scope, _root, template);
+      };
     };
     __nodeBind = function(_node, _method, _scope, src) {
       return __computeBind(_scope, src, function(result) {

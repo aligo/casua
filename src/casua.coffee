@@ -240,26 +240,44 @@ class casua.ArrayScope extends casua.Scope
   remove: (key) ->
     _scopeRemovePrepare @, key
     @_data.splice key, 1
+
+  each: (fn) ->
+    for one, i in @_data
+      fn.call @, one, i
      
 casua.defineController = (fn) ->
+
   _renderNode = (_controller, _scope, _root, template) ->
-    for node_meta, child of template
-      unless node_meta.charAt(0) == '@'
-        node = new casua.Node node_meta
-        _root.append node
-        if typeof child is 'object'
-          _renderNode _controller, _scope, node, child
+    if _scope instanceof casua.ArrayScope
+      _renderNodes _controller, _scope, _root, template
+    else
+      for node_meta, child of template
+        unless node_meta.charAt(0) == '@'
+          node = new casua.Node node_meta
+          _root.append node
+          if typeof child is 'object'
+            _renderNode _controller, _scope, node, child
+          else
+            __nodeBind node, 'text', _scope, child
+          node
         else
-          __nodeBind node, 'text', _scope, child
-      else
-        if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)
-          switch r[1]
-            when 'on'
-              _root.on r[2], _controller.methods[child]
-            when 'html', 'text'
-              __nodeBind _root, r[1], _scope, child
-            when 'child'
-              _renderNode _controller, _scope.get(r[2]), _root, child
+          if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)
+            switch r[1]
+              when 'on'
+                _root.on r[2], _controller.methods[child]
+              when 'html', 'text'
+                __nodeBind _root, r[1], _scope, child
+              when 'child'
+                _renderNode _controller, _scope.get(r[2]), _root, child
+
+  _renderNodes = (_controller, _scope, _root, template) ->
+    add_fn = _generateNodesAddFn _controller, _root, template
+    _scope.$watch '$add', add_fn
+    _scope.each (one) -> add_fn.call {}, one
+
+  _generateNodesAddFn = (_controller, _root, template) ->
+    (new_scope) ->
+      _renderNode _controller, new_scope, _root, template
 
   __nodeBind = (_node, _method, _scope, src) ->
     __computeBind _scope, src, (result) ->
