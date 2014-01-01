@@ -313,7 +313,7 @@ casua.defineController = (fn) ->
       @methods = fn.call @, @scope, @
 
     renderAt: (container, template) ->
-      _renderNode @, @scope, container, template
+      _renderNode @, @scope, (new casua.Node container).empty(), template
 
     render: (template) ->
       fragment = new casua.Node document.createElement 'div'

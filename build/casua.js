@@ -550,7 +550,7 @@ Released under the MIT license
       }
 
       _Class.prototype.renderAt = function(container, template) {
-        return _renderNode(this, this.scope, container, template);
+        return _renderNode(this, this.scope, (new casua.Node(container)).empty(), template);
       };
 
       _Class.prototype.render = function(template) {
