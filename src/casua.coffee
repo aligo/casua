@@ -312,9 +312,12 @@ casua.defineController = (fn) ->
       @scope = new casua.Scope init_data
       @methods = fn.call @, @scope, @
 
+    renderAt: (container, template) ->
+      _renderNode @, @scope, container, template
+
     render: (template) ->
-      fragment = new casua.Node document.createDocumentFragment()
-      _renderNode @, @scope, fragment, template
+      fragment = new casua.Node document.createElement 'div'
+      @renderAt fragment, template
       fragment
 
 window.casua = casua

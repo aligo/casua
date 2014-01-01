@@ -5,7 +5,7 @@ test 'defineController', ->
   container = new casua.Node ''
   testController = casua.defineController ->
   testCtrlInst = new testController {}
-  container.empty().append testCtrlInst.render
+  testCtrlInst.renderAt container,
     '.test':
       '.test2': '<test3>'
   equal container[0].innerHTML, '<div class="test"><div class="test2">&lt;test3&gt;</div></div>', 'ok'
@@ -18,10 +18,9 @@ test 'array scope', ->
     { title: 'two' }
   ]
   array = testCtrlInst.scope
-  fragment = testCtrlInst.render
+  testCtrlInst.renderAt container,
     'li':
       'span': '@title'
-  container.empty().append fragment
 
   equal container.html(), '<li><span>one</span></li><li><span>two</span></li>', 'ok'  
   array.push { title: 'three' }

@@ -549,10 +549,14 @@ Released under the MIT license
         this.methods = fn.call(this, this.scope, this);
       }
 
+      _Class.prototype.renderAt = function(container, template) {
+        return _renderNode(this, this.scope, container, template);
+      };
+
       _Class.prototype.render = function(template) {
         var fragment;
-        fragment = new casua.Node(document.createDocumentFragment());
-        _renderNode(this, this.scope, fragment, template);
+        fragment = new casua.Node(document.createElement('div'));
+        this.renderAt(fragment, template);
         return fragment;
       };
 
