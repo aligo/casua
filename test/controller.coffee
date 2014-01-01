@@ -22,9 +22,11 @@ test 'array scope', ->
     'li':
       'span': '@title'
 
-  equal container.html(), '<li><span>one</span></li><li><span>two</span></li>', 'ok'  
+  equal container.html(), '<li><span>one</span></li><li><span>two</span></li>', 'render'  
   array.push { title: 'three' }
-  equal container.html(), '<li><span>one</span></li><li><span>two</span></li><li><span>three</span></li>', 'ok'  
+  equal container.html(), '<li><span>one</span></li><li><span>two</span></li><li><span>three</span></li>', 'warch $add'
+  array.shift()
+  equal container.html(), '<li><span>two</span></li><li><span>three</span></li>', 'warch $delete'
 
 test 'CST @on', ->
   clicked = 0

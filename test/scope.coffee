@@ -81,10 +81,10 @@ test 'Should can watch', ->
   deepEqual changed.pop(), ['changed1', 2, 'test2'], 'child\'s watch can be triggered when it has not key same as parent)'
 
   scope.set 'new', 'new value'
-  deepEqual changed.pop(), ['new value', 'new', '$add'], 'watch $add'
+  deepEqual changed.pop(), ['new value', '$add', 'new'], 'watch $add'
 
   scope.remove 'new'
-  deepEqual changed.pop(), ['new value', 'new', '$delete'], 'watch $delete'
+  deepEqual changed.pop(), ['new value', '$delete', 'new'], 'watch $delete'
 
 test 'Should can watch ArrayScope', ->
   changed = []
@@ -99,7 +99,7 @@ test 'Should can watch ArrayScope', ->
   scope.get('arr').$watch '$add', watch_fn
   scope.get('arr').$watch '$delete', watch_fn
   scope.get('arr').push 4
-  deepEqual changed.pop(), [4, 3, '$add'], 'watch $add'
+  deepEqual changed.pop(), [4, '$add', 3], 'watch $add'
 
   scope.get('arr').$watch 3, watch_fn
   scope.get('arr').set 3, 'test'
@@ -109,7 +109,7 @@ test 'Should can watch ArrayScope', ->
   deepEqual changed.pop(), ['test', 2, 2], 'watch $delete'
   deepEqual changed.pop(), [2, 1, 1], 'watch $delete'
   deepEqual changed.pop(), [1, 0, 0], 'watch $delete'
-  deepEqual changed.pop(), ['test', 3, '$delete'], 'watch $delete'
+  deepEqual changed.pop(), ['test', '$delete', 3], 'watch $delete'
 
   scope.set 'test', 'change'
   deepEqual changed.pop(), ['change', -1, 'test'], 'watch parent'

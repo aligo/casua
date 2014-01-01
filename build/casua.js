@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
+  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -254,6 +254,15 @@ Released under the MIT license
       return this;
     };
 
+    Node.prototype.remove = function() {
+      _forEach(this, function() {
+        if (this.parentNode) {
+          return this.parentNode.removeChild(this);
+        }
+      });
+      return this;
+    };
+
     return Node;
 
   })();
@@ -277,22 +286,21 @@ Released under the MIT license
         s._parent._childs.splice(i, 1);
       }
     }
-    return _scopeCallWatch(_scope, _scope._data[key], key, '$delete', false);
+    return _scopeCallWatch(_scope, _scope._data[key], key, '$delete');
   };
 
-  _scopeCallWatch = function(_scope, new_val, old_val, key, to_childs) {
+  _scopeCallWatch = function(_scope, new_val, old_val, key) {
     var child, fn, _i, _j, _len, _len1, _ref, _ref1, _results;
-    if (to_childs == null) {
-      to_childs = true;
-    }
-    if (_scope._watchs[key]) {
-      _ref = _scope._watchs[key];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        fn = _ref[_i];
-        fn.call(_scope, new_val, old_val, key);
+    if (typeof key === 'string' && key.charAt(0) === '$') {
+      return _scopeCallAltWatch(_scope, new_val, old_val, key);
+    } else {
+      if (_scope._watchs[key]) {
+        _ref = _scope._watchs[key];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          fn = _ref[_i];
+          fn.call(_scope, new_val, old_val, key);
+        }
       }
-    }
-    if (to_childs) {
       _ref1 = _scope._childs;
       _results = [];
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
@@ -302,6 +310,19 @@ Released under the MIT license
         } else {
           _results.push(void 0);
         }
+      }
+      return _results;
+    }
+  };
+
+  _scopeCallAltWatch = function(_scope, new_val, key, type) {
+    var fn, _i, _len, _ref, _results;
+    if (_scope._watchs[type]) {
+      _ref = _scope._watchs[type];
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        fn = _ref[_i];
+        _results.push(fn.call(_scope, new_val, type, key));
       }
       return _results;
     }
@@ -344,7 +365,7 @@ Released under the MIT license
           old = this._data[key];
           this._data[key] = value;
           if (old == null) {
-            _scopeCallWatch(this, value, key, '$add', false);
+            _scopeCallWatch(this, value, key, '$add');
           }
           return _scopeCallWatch(this, value, old, key);
         }
@@ -444,7 +465,7 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(fn) {
-    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, _generateNodesAddFn, _renderNode, _renderNodes;
+    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
       var child, node, node_meta, r, _results;
       if (_scope instanceof casua.ArrayScope) {
@@ -487,17 +508,25 @@ Released under the MIT license
       }
     };
     _renderNodes = function(_controller, _scope, _root, template) {
-      var add_fn;
-      add_fn = _generateNodesAddFn(_controller, _root, template);
-      _scope.$watch('$add', add_fn);
-      return _scope.each(function(one) {
-        return add_fn.call({}, one);
-      });
-    };
-    _generateNodesAddFn = function(_controller, _root, template) {
-      return function(new_scope) {
-        return _renderNode(_controller, new_scope, _root, template);
+      var add_fn, _nodes;
+      _nodes = [];
+      add_fn = function(new_scope, type, idx) {
+        return _nodes[idx] = _renderNode(_controller, new_scope, _root, template);
       };
+      _scope.$watch('$add', add_fn);
+      _scope.$watch('$delete', function(new_scope, type, idx) {
+        var node, nodes, _i, _len, _results;
+        nodes = _nodes.splice(idx, 1)[0];
+        _results = [];
+        for (_i = 0, _len = nodes.length; _i < _len; _i++) {
+          node = nodes[_i];
+          _results.push(node.remove());
+        }
+        return _results;
+      });
+      return _scope.each(function(one, idx) {
+        return add_fn.call({}, one, null, idx);
+      });
     };
     __nodeBind = function(_node, _method, _scope, src) {
       return __computeBind(_scope, src, function(result) {
@@ -556,7 +585,7 @@ Released under the MIT license
       _Class.prototype.render = function(template) {
         var fragment;
         fragment = new casua.Node(document.createElement('div'));
-        this.renderAt(fragment, template);
+        _renderNode(this, this.scope, fragment, template);
         return fragment;
       };
 

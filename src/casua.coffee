@@ -150,6 +150,11 @@ class casua.Node
       @dispatchEvent event
     @
 
+  remove: ->
+    _forEach @, ->
+      @parentNode.removeChild @ if @parentNode
+    @
+
 _scopeInitParent = (_scope, _parent) ->
   _scope._childs = []
   if _parent?
@@ -162,15 +167,21 @@ _scopeRemovePrepare = (_scope, key) ->
     if s._parent?
       i = s._parent._childs.indexOf s
       s._parent._childs.splice i, 1
-  _scopeCallWatch _scope, _scope._data[key], key, '$delete', false
+  _scopeCallWatch _scope, _scope._data[key], key, '$delete'
 
-_scopeCallWatch = (_scope, new_val, old_val, key, to_childs = true) ->
-  if _scope._watchs[key]
-    fn.call _scope, new_val, old_val, key for fn in _scope._watchs[key]
-  if to_childs
+_scopeCallWatch = (_scope, new_val, old_val, key) ->
+  if typeof key is 'string' && key.charAt(0) == '$'
+    _scopeCallAltWatch _scope, new_val, old_val, key
+  else
+    if _scope._watchs[key]
+      fn.call _scope, new_val, old_val, key for fn in _scope._watchs[key]
     for child in _scope._childs
       unless child._data[key]?
         _scopeCallWatch child, new_val, old_val, key
+
+_scopeCallAltWatch = (_scope, new_val, key, type) ->
+  if _scope._watchs[type]
+    fn.call _scope, new_val, type, key for fn in _scope._watchs[type]
 
 class casua.Scope
 
@@ -198,7 +209,7 @@ class casua.Scope
         old = @_data[key]
         @_data[key] = value
         unless old?
-          _scopeCallWatch @, value, key, '$add', false
+          _scopeCallWatch @, value, key, '$add'
         _scopeCallWatch @, value, old, key
 
   remove: (key) ->
@@ -271,13 +282,14 @@ casua.defineController = (fn) ->
                 _renderNode _controller, _scope.get(r[2]), _root, child
 
   _renderNodes = (_controller, _scope, _root, template) ->
-    add_fn = _generateNodesAddFn _controller, _root, template
+    _nodes = []
+    add_fn = (new_scope, type, idx) ->
+      _nodes[idx] = _renderNode _controller, new_scope, _root, template
     _scope.$watch '$add', add_fn
-    _scope.each (one) -> add_fn.call {}, one
-
-  _generateNodesAddFn = (_controller, _root, template) ->
-    (new_scope) ->
-      _renderNode _controller, new_scope, _root, template
+    _scope.$watch '$delete', (new_scope, type, idx) ->
+      nodes = _nodes.splice(idx, 1)[0]
+      node.remove() for node in nodes
+    _scope.each (one, idx) -> add_fn.call {}, one, null, idx
 
   __nodeBind = (_node, _method, _scope, src) ->
     __computeBind _scope, src, (result) ->
@@ -317,7 +329,7 @@ casua.defineController = (fn) ->
 
     render: (template) ->
       fragment = new casua.Node document.createElement 'div'
-      @renderAt fragment, template
+      _renderNode @, @scope, fragment, template
       fragment
 
 window.casua = casua
