@@ -55,17 +55,18 @@ test 'Should can be created to ArrayScope', ->
 
 test 'Should can watch', ->
   changed = []
+  watch_fn = (n, o, k) -> changed.push [n, o, k]
   scope = new casua.Scope
     test: 1
     test2: 2
     child:
       test: 2
       test3: 3
-  scope.$watch 'test', (n, o, k) -> changed.push [n, o, k]
-  scope.get('child').$watch 'test', (n, o, k) -> changed.push [n, o, k]
-  scope.get('child').$watch 'test2', (n, o, k) -> changed.push [n, o, k]
-  scope.$watch '$add', (n, o, k) -> changed.push [n, o, k]
-  scope.$watch '$delete', (n, o, k) -> changed.push [n, o, k]
+  scope.$watch 'test', watch_fn
+  scope.get('child').$watch 'test', watch_fn
+  scope.get('child').$watch 'test2', watch_fn
+  scope.$watch '$add', watch_fn
+  scope.$watch '$delete', watch_fn
   scope.set 'test', 'changed'
   deepEqual changed.pop(), ['changed', 1, 'test'], 'watch set()'
   equal changed.length, 0, 'child\'s watch can not be triggered when it has same key as parent'
@@ -78,3 +79,31 @@ test 'Should can watch', ->
 
   scope.remove 'new'
   deepEqual changed.pop(), ['new value', 'new', '$delete'], 'watch $delete'
+
+test 'Should can watch ArrayScope', ->
+  changed = []
+  watch_fn = (n, o, k) -> changed.push [n, o, k]
+  scope = new casua.Scope
+    arr: [0, 1, 2]
+    test: -1
+  scope.get('arr').$watch 0, watch_fn
+  scope.get('arr').$watch 1, watch_fn
+  scope.get('arr').$watch 2, watch_fn
+  scope.get('arr').$watch 'test', watch_fn
+  scope.get('arr').$watch '$add', watch_fn
+  scope.get('arr').$watch '$delete', watch_fn
+  scope.get('arr').push 4
+  deepEqual changed.pop(), [4, 3, '$add'], 'watch $add'
+
+  scope.get('arr').$watch 3, watch_fn
+  scope.get('arr').set 3, 'test'
+  deepEqual changed.pop(), ['test', 4, 3], 'watch set()'
+
+  equal scope.get('arr').shift(), 0, 'watch $delete'
+  deepEqual changed.pop(), ['test', 2, 2], 'watch $delete'
+  deepEqual changed.pop(), [2, 1, 1], 'watch $delete'
+  deepEqual changed.pop(), [1, 0, 0], 'watch $delete'
+  deepEqual changed.pop(), ['test', 3, '$delete'], 'watch $delete'
+
+  scope.set 'test', 'change'
+  deepEqual changed.pop(), ['change', -1, 'test'], 'watch parent'
