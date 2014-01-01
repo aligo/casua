@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeInitParent, _shallowCopy,
+  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallWatch, _scopeInitParent, _shallowCopy,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -268,6 +268,33 @@ Released under the MIT license
     }
   };
 
+  _scopeCallWatch = function(_scope, new_val, old_val, key, to_childs) {
+    var child, fn, _i, _j, _len, _len1, _ref, _ref1, _results;
+    if (to_childs == null) {
+      to_childs = true;
+    }
+    if (_scope._watchs[key]) {
+      _ref = _scope._watchs[key];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        fn = _ref[_i];
+        fn.call(_scope, new_val, old_val, key);
+      }
+    }
+    if (to_childs) {
+      _ref1 = _scope._childs;
+      _results = [];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        child = _ref1[_j];
+        if (child._data[key] == null) {
+          _results.push(_scopeCallWatch(child, new_val, old_val, key));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    }
+  };
+
   casua.Scope = (function() {
     function Scope(init_data, parent) {
       var key, value;
@@ -277,7 +304,7 @@ Released under the MIT license
         return new casua.ArrayScope(init_data, parent);
       } else {
         _scopeInitParent(this, parent);
-        this._olds = {};
+        this._watchs = {};
         this._data = {};
         for (key in init_data) {
           value = init_data[key];
@@ -296,10 +323,18 @@ Released under the MIT license
     };
 
     Scope.prototype.set = function(key, value) {
-      if (typeof value === 'object') {
-        value = new casua.Scope(value, this);
+      if (!(typeof key === 'string' && key.charAt(0) === '$')) {
+        if (typeof value === 'object') {
+          value = new casua.Scope(value, this);
+        }
+        if (this._data[key] !== value) {
+          if (this._data[key] == null) {
+            _scopeCallWatch(this, value, key, '$add', false);
+          }
+          _scopeCallWatch(this, value, this._data[key], key);
+          return this._data[key] = value;
+        }
       }
-      return this._data[key] = value;
     };
 
     Scope.prototype.remove = function(key) {
@@ -311,7 +346,14 @@ Released under the MIT license
           s._parent._childs.splice(i, 1);
         }
       }
+      _scopeCallWatch(this, this._data[key], key, '$delete', false);
       return delete this._data[key];
+    };
+
+    Scope.prototype.$watch = function(key, fn) {
+      var _base;
+      (_base = this._watchs)[key] || (_base[key] = []);
+      return this._watchs[key].push(fn);
     };
 
     return Scope;
@@ -359,7 +401,7 @@ Released under the MIT license
         return new casua.Scope(init_data, parent);
       } else {
         _scopeInitParent(this, parent);
-        this._olds = [];
+        this._watchs = {};
         this._data = [];
         for (idx = _j = 0, _len1 = init_data.length; _j < _len1; idx = ++_j) {
           value = init_data[idx];
@@ -417,14 +459,14 @@ Released under the MIT license
       dst = src;
       binded_props = [];
       if (r = src.match(/^@(\S+)$/)) {
-        dst = _controller.scope[r[1]];
+        dst = _controller.scope.get(r[1]);
         binded_props.push(r[1]);
       }
       return dst;
     };
     return (function() {
       function _Class(init_data) {
-        this.scope = init_data;
+        this.scope = new casua.Scope(init_data);
         this.methods = fn.call(this, this.scope);
       }
 

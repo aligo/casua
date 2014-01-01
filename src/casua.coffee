@@ -156,6 +156,14 @@ _scopeInitParent = (_scope, _parent) ->
     _parent._childs.push _scope if _parent._childs.indexOf(_scope) == -1
     _scope._parent = _parent
 
+_scopeCallWatch = (_scope, new_val, old_val, key, to_childs = true) ->
+  if _scope._watchs[key]
+    fn.call _scope, new_val, old_val, key for fn in _scope._watchs[key]
+  if to_childs
+    for child in _scope._childs
+      unless child._data[key]?
+        _scopeCallWatch child, new_val, old_val, key
+
 class casua.Scope
 
   constructor: (init_data, parent) ->
@@ -165,7 +173,7 @@ class casua.Scope
       return new casua.ArrayScope init_data, parent
     else
       _scopeInitParent @, parent
-      @_olds = {}
+      @_watchs = {}
       @_data = {}
       @set key, value for key, value of init_data
 
@@ -175,9 +183,14 @@ class casua.Scope
     ret
 
   set: (key, value) ->
-    if typeof value is 'object'
-      value = new casua.Scope value, @
-    @_data[key] = value
+    unless typeof key is 'string' && key.charAt(0) == '$'
+      if typeof value is 'object'
+        value = new casua.Scope value, @
+      if @_data[key] != value
+        unless @_data[key]?
+          _scopeCallWatch @, value, key, '$add', false
+        _scopeCallWatch @, value, @_data[key], key
+        @_data[key] = value
 
   remove: (key) ->
     if @_data[key] instanceof casua.Scope
@@ -185,7 +198,12 @@ class casua.Scope
       if s._parent?
         i = s._parent._childs.indexOf s
         s._parent._childs.splice i, 1
+    _scopeCallWatch @, @_data[key], key, '$delete', false
     delete @_data[key]
+
+  $watch: (key, fn) ->
+    @_watchs[key] ||= []
+    @_watchs[key].push fn
 
 class casua.ArrayScope extends casua.Scope
 
@@ -207,7 +225,7 @@ class casua.ArrayScope extends casua.Scope
       return new casua.Scope init_data, parent
     else
       _scopeInitParent @, parent
-      @_olds = []
+      @_watchs = {}
       @_data = []
       @set idx, value for value, idx in init_data
 
@@ -234,14 +252,14 @@ casua.defineController = (fn) ->
     dst = src
     binded_props = []
     if r = src.match(/^@(\S+)$/)
-      dst = _controller.scope[r[1]]
+      dst = _controller.scope.get(r[1])
       binded_props.push r[1]
     dst
 
   class
     constructor: (init_data) ->
       # TODO: must handle controllers inside init_data, then replace them to own @scope first
-      @scope = init_data # scope
+      @scope = new casua.Scope init_data # scope
       @methods = fn.call @, @scope
 
     render: (template) ->
