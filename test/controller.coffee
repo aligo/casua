@@ -33,3 +33,16 @@ test 'CST @on', ->
 
   _test._trigger fragment1[0].children[0], 'click'
   equal clicked, 1, '@on click: clickOne'
+
+test 'CST @html', ->
+  testController = casua.defineController ->
+  testCtrlInst = new testController
+    test: 'model value'
+  fragment1 = testCtrlInst.render
+    'h1':
+      '@html': 'pure html'
+  equal fragment1[0].children[0].innerHTML, 'pure html', 'pure html'
+  fragment2 = testCtrlInst.render
+    'h1':
+      '@html': '@test'
+  equal fragment2[0].children[0].innerHTML, 'model value', 'model value'

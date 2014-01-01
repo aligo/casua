@@ -411,9 +411,9 @@ Released under the MIT license
   })();
 
   casua.defineController = function(fn) {
-    var _renderNode;
+    var _computeBind, _renderNode;
     _renderNode = function(_controller, _root, template) {
-      var child, node, node_meta, r, _results;
+      var child, node, node_meta, r, value, _results;
       _results = [];
       for (node_meta in template) {
         child = template[node_meta];
@@ -431,6 +431,11 @@ Released under the MIT license
               case 'on':
                 _results.push(_root.on(r[2], _controller.methods[child]));
                 break;
+              case 'html':
+              case 'text':
+                value = _computeBind(_controller, child);
+                _results.push(_root[r[1]].call(_root, value));
+                break;
               default:
                 _results.push(void 0);
             }
@@ -441,11 +446,20 @@ Released under the MIT license
       }
       return _results;
     };
+    _computeBind = function(_controller, src) {
+      var binded_props, dst, r;
+      dst = src;
+      binded_props = [];
+      if (r = src.match(/^@(\S+)$/)) {
+        dst = _controller.scope[r[1]];
+        binded_props.push(r[1]);
+      }
+      return dst;
+    };
     return (function() {
       function _Class(init_data) {
-        var scope;
-        scope = init_data;
-        this.methods = fn.call(this, scope);
+        this.scope = new casua.Model(init_data);
+        this.methods = fn.call(this, this.scope);
       }
 
       _Class.prototype.render = function(template) {

@@ -245,11 +245,23 @@ casua.defineController = (fn) ->
           switch r[1]
             when 'on'
               _root.on r[2], _controller.methods[child]
+            when 'html', 'text'
+              value = _computeBind _controller, child
+              _root[r[1]].call _root, value
+
+  _computeBind = (_controller, src) ->
+    dst = src
+    binded_props = []
+    if r = src.match(/^@(\S+)$/)
+      dst = _controller.scope[r[1]]
+      binded_props.push r[1]
+    dst
 
   class
     constructor: (init_data) ->
-      scope = init_data # temporary
-      @methods = fn.call @, scope
+      # TODO: must handle controllers inside init_data, then replace them to own @scope first
+      @scope = new casua.Model init_data
+      @methods = fn.call @, @scope
 
     render: (template) ->
       fragment = new casua.Node document.createDocumentFragment()
