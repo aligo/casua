@@ -448,7 +448,7 @@ Released under the MIT license
             _results.push(void 0);
           }
         } else {
-          if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\w+))?$/)) {
+          if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
             switch (r[1]) {
               case 'on':
                 _results.push(_root.on(r[2], _controller.methods[child]));

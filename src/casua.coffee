@@ -251,7 +251,7 @@ casua.defineController = (fn) ->
         if typeof child is 'object'
           _renderNode _controller, _scope, node, child
       else
-        if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\w+))?$/)
+        if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)
           switch r[1]
             when 'on'
               _root.on r[2], _controller.methods[child]

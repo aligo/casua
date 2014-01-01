@@ -60,4 +60,4 @@ test 'CST @html', ->
   equal fragment3[0].children[0].innerHTML, 'changed is good.', 'scope value changed 2'
 
   scope.set 'test2', 'is better'
-  equal fragment3[0].children[0].innerHTML, 'changed is better.', 'scope value changed 2'
+  equal fragment3[0].children[0].innerHTML, 'changed is better.', 'scope value changed 3'
