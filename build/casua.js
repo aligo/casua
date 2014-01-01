@@ -457,6 +457,9 @@ Released under the MIT license
               case 'text':
                 _results.push(__nodeBind(_root, r[1], _scope, child));
                 break;
+              case 'child':
+                _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
+                break;
               default:
                 _results.push(void 0);
             }

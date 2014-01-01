@@ -258,6 +258,8 @@ casua.defineController = (fn) ->
               _root.on r[2], _controller.methods[child]
             when 'html', 'text'
               __nodeBind _root, r[1], _scope, child
+            when 'child'
+              _renderNode _controller, _scope.get(r[2]), _root, child
 
   __nodeBind = (_node, _method, _scope, src) ->
     __computeBind _scope, src, (result) ->

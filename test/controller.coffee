@@ -61,3 +61,23 @@ test 'CST @html', ->
 
   scope.set 'test2', 'is better'
   equal fragment3[0].children[0].innerHTML, 'changed is better.', 'scope value changed 3'
+
+test 'CST @child', ->
+  testController = casua.defineController ->
+  testCtrlInst = new testController
+    test: 'parent'
+    child_test:
+      test2: 'child'
+      test3: 'this is a child'
+  fragment1 = testCtrlInst.render
+    'div':
+      'h1': '@test'
+      '@child child_test':
+        'h2': '@test2'
+        'div': '{{test3}}'
+
+  equal fragment1[0].children[0].innerHTML, '<h1>parent</h1><h2>child</h2><div>this is a child</div>', 'child 1'
+
+  testCtrlInst.scope.get('child_test').set 'test2', 'changed'
+
+  equal fragment1[0].children[0].innerHTML, '<h1>parent</h1><h2>changed</h2><div>this is a child</div>', 'child binding'
