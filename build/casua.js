@@ -256,157 +256,60 @@ Released under the MIT license
 
   })();
 
-  casua.Model = (function() {
-    var __callWatchs, __defineArrayMethods, __forProps, __initProp, __watchProp, _arrayMethods, _models, _watchLoop, _watchModel;
-
-    _models = [];
-
-    _watchLoop = function() {
-      var i, _i, _len, _model, _results;
-      _results = [];
-      for (i = _i = 0, _len = _models.length; _i < _len; i = ++_i) {
-        _model = _models[i];
-        _results.push(_watchModel(_model));
-      }
-      return _results;
-    };
-
-    _watchModel = function(_model) {
-      var i, prop, _i, _len, _ref;
-      _ref = _model._props;
-      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-        prop = _ref[i];
-        if (_model[prop] != null) {
-          __watchProp(_model, prop);
-        } else {
-          __callWatchs(_model, '$delete', prop, _model._olds[prop]);
-          delete _model._olds[prop];
-          _model._props.splice(i, 1);
-        }
-      }
-      return __forProps(_model);
-    };
-
-    __forProps = function(_model, init_data) {
-      var prop, value, _i, _len, _results, _results1;
-      init_data || (init_data = _model);
-      if (init_data.length) {
-        _results = [];
-        for (prop = _i = 0, _len = init_data.length; _i < _len; prop = ++_i) {
-          value = init_data[prop];
-          prop = prop.toString();
-          _results.push(__initProp(_model, prop, value));
-        }
-        return _results;
-      } else if (typeof _model === 'object') {
-        _results1 = [];
-        for (prop in init_data) {
-          value = init_data[prop];
-          _results1.push(__initProp(_model, prop, value));
-        }
-        return _results1;
-      }
-    };
-
-    __initProp = function(_model, prop, value) {
-      if (!(prop.charAt(0) === '_' || typeof value === 'function' || _model._props.indexOf(prop) !== -1 || _model._props_blacklist.indexOf(prop) !== -1)) {
-        if (typeof value === 'object') {
-          value = new casua.Model(value);
-        }
-        _model._props.push(prop);
-        _model[prop] = value;
-        __callWatchs(_model, '$add', prop, value);
-        return __watchProp(_model, prop);
-      }
-    };
-
-    __watchProp = function(_model, prop) {
-      if (_model[prop] !== _model._olds[prop]) {
-        __callWatchs(_model, prop, _model[prop], _model._olds[prop]);
-        return _model._olds[prop] = _model[prop];
-      }
-    };
-
-    __callWatchs = function(_model, prop, new_val, old_val) {
-      var fn, _i, _len, _ref, _results;
-      if (_model._watchs[prop]) {
-        _ref = _model._watchs[prop];
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          fn = _ref[_i];
-          _results.push(fn.call(_model, new_val, old_val));
-        }
-        return _results;
-      }
-    };
-
-    _arrayMethods = ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift'];
-
-    __defineArrayMethods = function(_model) {
-      var method, _i, _len, _results;
-      _results = [];
-      for (_i = 0, _len = _arrayMethods.length; _i < _len; _i++) {
-        method = _arrayMethods[_i];
-        _results.push((function(method) {
-          return _model[method] = function() {
-            var i, j, one, ret, _array, _j, _k, _len1, _ref;
-            _array = (function() {
-              var _j, _len1, _results1;
-              _results1 = [];
-              for (_j = 0, _len1 = _model.length; _j < _len1; _j++) {
-                one = _model[_j];
-                _results1.push(one);
-              }
-              return _results1;
-            })();
-            ret = _array[method].apply(_array, arguments);
-            i = 0;
-            for (i = _j = 0, _len1 = _array.length; _j < _len1; i = ++_j) {
-              one = _array[i];
-              _model[i] = one;
-            }
-            if (i < _model.length) {
-              for (j = _k = i, _ref = _model.length - 1; i <= _ref ? _k <= _ref : _k >= _ref; j = i <= _ref ? ++_k : --_k) {
-                delete _model[j];
-              }
-            }
-            _model.length = _array.length;
-            _watchModel(_model);
-            return ret;
-          };
-        })(method));
-      }
-      return _results;
-    };
-
-    setInterval(_watchLoop, 50);
-
-    function Model(init_data) {
-      _models.push(this);
-      this._props = [];
-      this._olds = {};
-      this._watchs = {};
-      this._props_blacklist = [];
-      if (init_data instanceof casua.Model) {
+  casua.Scope = (function() {
+    function Scope(init_data, parent) {
+      var key, value;
+      if (init_data instanceof casua.Scope) {
         return init_data;
+      } else if (init_data.length) {
+        return new casua.ArrayScope(init_data, parent);
       } else {
-        if (init_data.length) {
-          this.length = init_data.length;
-          this._props_blacklist = _arrayMethods;
-          __defineArrayMethods(this);
-          __initProp(this, 'length', this.length);
+        if (parent != null) {
+          if (parent._childs.indexOf(this) === -1) {
+            parent._childs.push(this);
+          }
+          this._parent = parent;
         }
-        __forProps(this, init_data);
+        this._data = {};
+        this._childs = [];
+        for (key in init_data) {
+          value = init_data[key];
+          if (typeof value !== 'function') {
+            this.set(key, value);
+          }
+        }
       }
     }
 
-    Model.prototype.$watch = function(prop, fn) {
-      var _base;
-      (_base = this._watchs)[prop] || (_base[prop] = []);
-      return this._watchs[prop].push(fn);
+    Scope.prototype.get = function(key) {
+      var ret;
+      ret = this._data[key];
+      if ((ret == null) && (this._parent != null)) {
+        ret = this._parent.get(key);
+      }
+      return ret;
     };
 
-    return Model;
+    Scope.prototype.set = function(key, value) {
+      if (typeof value === 'object') {
+        value = new casua.Scope(value, this);
+      }
+      return this._data[key] = value;
+    };
+
+    Scope.prototype.remove = function(key) {
+      var i, s;
+      if (this._data[key] instanceof casua.Scope) {
+        s = this._data[key];
+        if (s._parent != null) {
+          i = s._parent._childs.indexOf(s);
+          s._parent._childs.splice(i, 1);
+        }
+      }
+      return delete this._data[key];
+    };
+
+    return Scope;
 
   })();
 
@@ -458,7 +361,7 @@ Released under the MIT license
     };
     return (function() {
       function _Class(init_data) {
-        this.scope = new casua.Model(init_data);
+        this.scope = init_data;
         this.methods = fn.call(this, this.scope);
       }
 

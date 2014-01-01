@@ -150,88 +150,41 @@ class casua.Node
       @dispatchEvent event
     @
 
-class casua.Model
+class casua.Scope
 
-  _models = []
-
-  _watchLoop = -> _watchModel _model for _model, i in _models
-
-  _watchModel = (_model) ->
-    for prop, i in _model._props
-      if _model[prop]?
-        __watchProp _model, prop
-      else
-        __callWatchs _model, '$delete', prop, _model._olds[prop]
-        delete _model._olds[prop]
-        _model._props.splice i, 1
-    __forProps _model
-
-  __forProps = (_model, init_data) ->
-    init_data ||= _model
-    if init_data.length
-      for value, prop in init_data
-        prop = prop.toString()
-        __initProp _model, prop, value
-    else if typeof _model is 'object'
-      __initProp _model, prop, value for prop, value of init_data
-
-  __initProp = (_model, prop, value) ->
-    unless prop.charAt(0) == '_' || typeof value is 'function' || _model._props.indexOf(prop) != -1 || _model._props_blacklist.indexOf(prop) != -1
-      if typeof value is 'object'
-        value = new casua.Model value
-      _model._props.push prop
-      _model[prop] = value
-      __callWatchs _model, '$add', prop, value
-      __watchProp _model, prop
-
-  __watchProp = (_model, prop) ->
-    if _model[prop] != _model._olds[prop]
-      __callWatchs _model, prop, _model[prop], _model._olds[prop]
-      _model._olds[prop] = _model[prop]
-
-  __callWatchs = (_model, prop, new_val, old_val) ->
-    if _model._watchs[prop]
-      fn.call _model, new_val, old_val for fn in _model._watchs[prop]
-
-  _arrayMethods = ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift']
-  __defineArrayMethods = (_model) ->
-    for method in _arrayMethods
-      ( (method) ->
-        _model[method] = ->
-          _array = for one in _model
-            one
-          ret = _array[method].apply _array, arguments
-          i = 0
-          _model[i] = one for one, i in _array
-          if i < _model.length
-            delete _model[j] for j in [i..(_model.length - 1)]
-          _model.length = _array.length
-          _watchModel _model
-          ret
-      )(method)
-
-  setInterval _watchLoop, 50
-
-  constructor: (init_data) ->
-    _models.push @
-    @_props = []
-    @_olds = {}
-    @_watchs = {}
-    @_props_blacklist = []
-    if init_data instanceof casua.Model
+  constructor: (init_data, parent) ->
+    if init_data instanceof casua.Scope
       return init_data
+    else if init_data.length
+      return new casua.ArrayScope init_data, parent
     else
-      if init_data.length
-        @length = init_data.length
-        @_props_blacklist = _arrayMethods
-        __defineArrayMethods @
-        __initProp @, 'length', @length
-      __forProps @, init_data
+      if parent?
+        parent._childs.push @ if parent._childs.indexOf(@) == -1
+        @_parent = parent
+      @_data = {}
+      @_childs = []
+      for key, value of init_data
+        unless typeof value is 'function'
+          @set key, value
 
-  $watch: (prop, fn) ->
-    @_watchs[prop] ||= []
-    @_watchs[prop].push fn
+  get: (key) ->
+    ret = @_data[key]
+    ret = @_parent.get(key) if !ret? && @_parent?
+    ret
 
+  set: (key, value) ->
+    if typeof value is 'object'
+      value = new casua.Scope value, @
+    @_data[key] = value
+
+  remove: (key) ->
+    if @_data[key] instanceof casua.Scope
+      s = @_data[key]
+      if s._parent?
+        i = s._parent._childs.indexOf s
+        s._parent._childs.splice i, 1
+    delete @_data[key]
+    
 casua.defineController = (fn) ->
   _renderNode = (_controller, _root, template) ->
     for node_meta, child of template
@@ -260,7 +213,7 @@ casua.defineController = (fn) ->
   class
     constructor: (init_data) ->
       # TODO: must handle controllers inside init_data, then replace them to own @scope first
-      @scope = new casua.Model init_data
+      @scope = init_data # scope
       @methods = fn.call @, @scope
 
     render: (template) ->
