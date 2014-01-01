@@ -48,6 +48,11 @@ test 'Should can be created to ArrayScope', ->
   equal scope.pop(), 'x', 'array pop()'
   equal scope.length(), 3, 'array pop()'
 
+  scope.remove 0
+  equal scope.length(), 2, 'array remove()'
+  equal scope.get(0), 2, 'array remove()'
+  equal scope.get(1), 4, 'array remove()'
+
 test 'Should can watch', ->
   changed = []
   scope = new casua.Scope

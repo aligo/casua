@@ -156,6 +156,14 @@ _scopeInitParent = (_scope, _parent) ->
     _parent._childs.push _scope if _parent._childs.indexOf(_scope) == -1
     _scope._parent = _parent
 
+_scopeRemovePrepare = (_scope, key) ->
+  if _scope._data[key] instanceof casua.Scope
+    s = _scope._data[key]
+    if s._parent?
+      i = s._parent._childs.indexOf s
+      s._parent._childs.splice i, 1
+  _scopeCallWatch _scope, _scope._data[key], key, '$delete', false
+
 _scopeCallWatch = (_scope, new_val, old_val, key, to_childs = true) ->
   if _scope._watchs[key]
     fn.call _scope, new_val, old_val, key for fn in _scope._watchs[key]
@@ -193,12 +201,7 @@ class casua.Scope
         @_data[key] = value
 
   remove: (key) ->
-    if @_data[key] instanceof casua.Scope
-      s = @_data[key]
-      if s._parent?
-        i = s._parent._childs.indexOf s
-        s._parent._childs.splice i, 1
-    _scopeCallWatch @, @_data[key], key, '$delete', false
+    _scopeRemovePrepare @, key
     delete @_data[key]
 
   $watch: (key, fn) ->
@@ -213,7 +216,9 @@ class casua.ArrayScope extends casua.Scope
         _array = for one in @_data
           one
         ret = _array[method].apply _array, arguments
-        @_data = []
+        while _array.length < @_data.length
+          @remove( @_data.length - 1 )
+        idx = 0
         @set idx, value for value, idx in _array
         ret
     )(method)
@@ -230,7 +235,11 @@ class casua.ArrayScope extends casua.Scope
       @set idx, value for value, idx in init_data
 
   length: -> @_data.length
-    
+
+  remove: (key) ->
+    _scopeRemovePrepare @, key
+    @_data.splice key, 1
+     
 casua.defineController = (fn) ->
   _renderNode = (_controller, _root, template) ->
     for node_meta, child of template

@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallWatch, _scopeInitParent, _shallowCopy,
+  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -268,6 +268,18 @@ Released under the MIT license
     }
   };
 
+  _scopeRemovePrepare = function(_scope, key) {
+    var i, s;
+    if (_scope._data[key] instanceof casua.Scope) {
+      s = _scope._data[key];
+      if (s._parent != null) {
+        i = s._parent._childs.indexOf(s);
+        s._parent._childs.splice(i, 1);
+      }
+    }
+    return _scopeCallWatch(_scope, _scope._data[key], key, '$delete', false);
+  };
+
   _scopeCallWatch = function(_scope, new_val, old_val, key, to_childs) {
     var child, fn, _i, _j, _len, _len1, _ref, _ref1, _results;
     if (to_childs == null) {
@@ -338,15 +350,7 @@ Released under the MIT license
     };
 
     Scope.prototype.remove = function(key) {
-      var i, s;
-      if (this._data[key] instanceof casua.Scope) {
-        s = this._data[key];
-        if (s._parent != null) {
-          i = s._parent._childs.indexOf(s);
-          s._parent._childs.splice(i, 1);
-        }
-      }
-      _scopeCallWatch(this, this._data[key], key, '$delete', false);
+      _scopeRemovePrepare(this, key);
       return delete this._data[key];
     };
 
@@ -380,7 +384,10 @@ Released under the MIT license
           return _results;
         }).call(this);
         ret = _array[method].apply(_array, arguments);
-        this._data = [];
+        while (_array.length < this._data.length) {
+          this.remove(this._data.length - 1);
+        }
+        idx = 0;
         for (idx = _j = 0, _len1 = _array.length; _j < _len1; idx = ++_j) {
           value = _array[idx];
           this.set(idx, value);
@@ -412,6 +419,11 @@ Released under the MIT license
 
     ArrayScope.prototype.length = function() {
       return this._data.length;
+    };
+
+    ArrayScope.prototype.remove = function(key) {
+      _scopeRemovePrepare(this, key);
+      return this._data.splice(key, 1);
     };
 
     return ArrayScope;
