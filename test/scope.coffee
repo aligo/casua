@@ -133,3 +133,17 @@ test 'Should can watch ArrayScope 2', ->
   arr.sort (a, b) -> a - b
   deepEqual changed.shift(), [ [0, 4, 1, 2, 3, 5], '$move', null], 'watch sort() -> $move'
   
+test 'Should can get watch lists', ->
+  scope = new casua.Scope
+    test: 1
+    test2: 2
+    test3: 3
+  watch_lists = scope.$startGetWatches()
+  deepEqual watch_lists, [], 'get emtpy watch lists'
+  equal scope.get('test'), 1, 'normal get()'
+  deepEqual watch_lists, ['test'], 'get emtpy watch lists'
+  equal scope.get('test'), 1, 'normal get()'
+  equal scope.get('test2'), 2, 'normal get()'
+  deepEqual scope.$stopGetWatches(), ['test', 'test2'], 'get emtpy watch lists'
+  equal scope.get('test3'), 3, 'normal get()'
+  deepEqual watch_lists, ['test', 'test2'], 'get emtpy watch lists'

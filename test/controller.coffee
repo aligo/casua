@@ -56,7 +56,10 @@ test 'CST @on', ->
   equal clicked, 1, '@on click: clickOne'
 
 test 'CST @html', ->
-  testController = casua.defineController ->
+  testController = casua.defineController (scope) ->
+    computeMethod: ->
+      scope.get('test') + ' computed'
+
   testCtrlInst = new testController
     test: 'scope value'
     test2: 'is good'
@@ -74,12 +77,18 @@ test 'CST @html', ->
       '@html': '{{test}} {{test2}}.'
   equal fragment3[0].children[0].innerHTML, 'scope value is good.', 'computed binding'
 
+  fragment4 = testCtrlInst.render
+    'h1':
+      '@html': '@computeMethod()'
+  equal fragment4[0].children[0].innerHTML, 'scope value computed', 'compute method binding'
+
   scope = testCtrlInst.scope
   scope.set 'test', 'changed'
 
   equal fragment2[0].children[0].innerHTML, 'changed', 'scope value changed 1'
   equal fragment3[0].children[0].innerHTML, 'changed is good.', 'scope value changed 2'
-
+  equal fragment4[0].children[0].innerHTML, 'changed computed', 'changed compute method'
+  
   scope.set 'test2', 'is better'
   equal fragment3[0].children[0].innerHTML, 'changed is better.', 'scope value changed 3'
 

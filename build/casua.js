@@ -294,8 +294,8 @@ Released under the MIT license
     if (typeof key === 'string' && key.charAt(0) === '$') {
       return _scopeCallAltWatch(_scope, new_val, old_val, key);
     } else {
-      if (_scope._watchs[key]) {
-        _ref = _scope._watchs[key];
+      if (_scope._watches[key]) {
+        _ref = _scope._watches[key];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           fn = _ref[_i];
           fn.call(_scope, new_val, old_val, key);
@@ -317,8 +317,8 @@ Released under the MIT license
 
   _scopeCallAltWatch = function(_scope, new_val, key, type) {
     var fn, _i, _len, _ref, _results;
-    if (_scope._watchs[type]) {
-      _ref = _scope._watchs[type];
+    if (_scope._watches[type]) {
+      _ref = _scope._watches[type];
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         fn = _ref[_i];
@@ -337,7 +337,7 @@ Released under the MIT license
         return new casua.ArrayScope(init_data, parent);
       } else {
         _scopeInitParent(this, parent);
-        this._watchs = {};
+        this._watches = {};
         this._data = {};
         for (key in init_data) {
           value = init_data[key];
@@ -348,6 +348,9 @@ Released under the MIT license
 
     Scope.prototype.get = function(key) {
       var ret;
+      if (this._watch_lists && this._watch_lists.indexOf(key) === -1) {
+        this._watch_lists.push(key);
+      }
       ret = this._data[key];
       if ((ret == null) && (this._parent != null)) {
         ret = this._parent.get(key);
@@ -379,8 +382,28 @@ Released under the MIT license
 
     Scope.prototype.$watch = function(key, fn) {
       var _base;
-      (_base = this._watchs)[key] || (_base[key] = []);
-      return this._watchs[key].push(fn);
+      (_base = this._watches)[key] || (_base[key] = []);
+      return this._watches[key].push(fn);
+    };
+
+    Scope.prototype.$startGetWatches = function() {
+      return this._watch_lists = [];
+    };
+
+    Scope.prototype.$stopGetWatches = function() {
+      var lists, one;
+      lists = (function() {
+        var _i, _len, _ref, _results;
+        _ref = this._watch_lists;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          one = _ref[_i];
+          _results.push(one);
+        }
+        return _results;
+      }).call(this);
+      delete this._watch_lists;
+      return lists;
     };
 
     return Scope;
@@ -398,7 +421,7 @@ Released under the MIT license
         return new casua.Scope(init_data, parent);
       } else {
         _scopeInitParent(this, parent);
-        this._watchs = {};
+        this._watches = {};
         this._data = [];
         for (idx = _i = 0, _len = init_data.length; _i < _len; idx = ++_i) {
           value = init_data[idx];
@@ -422,7 +445,7 @@ Released under the MIT license
       _results = [];
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         one = _ref[i];
-        _results.push(fn.call(this, one, i));
+        _results.push(fn.call(this, this.get(i), i));
       }
       return _results;
     };
@@ -544,7 +567,7 @@ Released under the MIT license
                   break;
                 case 'html':
                 case 'text':
-                  _results.push(__nodeBind(_root, r[1], _scope, child));
+                  _results.push(__nodeBind(_controller, _root, r[1], _scope, child));
                   break;
                 case 'child':
                   _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
@@ -561,7 +584,7 @@ Released under the MIT license
             if (typeof child === 'object') {
               _renderNode(_controller, _scope, node, child);
             } else {
-              __nodeBind(node, 'text', _scope, child);
+              __nodeBind(_controller, node, 'text', _scope, child);
             }
             _results.push(node);
           }
@@ -615,49 +638,38 @@ Released under the MIT license
         return add_fn.call({}, one, null, idx);
       });
     };
-    __nodeBind = function(_node, _method, _scope, src) {
-      return __computeBind(_scope, src, function(result) {
+    __nodeBind = function(_controller, _node, _method, _scope, src) {
+      return __computeBind(_controller, _scope, src, function(result) {
         return _node[_method].call(_node, result);
       });
     };
     __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g;
     __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/;
-    __computeBind = function(_scope, src, fn) {
-      var key, keys_to_watch, part, r, watch_fn, _i, _len;
+    __computeBind = function(_controller, _scope, src, fn) {
+      var key, keys_to_watch, r, ret, watch_fn, _i, _len, _ref;
       keys_to_watch = [];
-      watch_fn = (function() {
-        var _i, _len;
-        if (r = src.match(/^@(\S+)$/)) {
-          key = r[1];
-          keys_to_watch.push(key);
-          return function() {
-            return fn.call({}, this.get(key));
-          };
-        } else if (r = src.match(__compute_match_regexp)) {
-          for (_i = 0, _len = r.length; _i < _len; _i++) {
-            part = r[_i];
-            part = part.match(__compute_match_key_regexp);
-            keys_to_watch.push(part[1]);
-          }
-          return function() {
-            var scope;
-            scope = this;
-            return fn.call({}, src.replace(__compute_match_regexp, function(part) {
-              part = part.match(__compute_match_key_regexp);
-              return scope.get(part[1]);
-            }));
-          };
-        } else {
-          return function() {
-            return fn.call({}, src);
-          };
-        }
-      })();
-      for (_i = 0, _len = keys_to_watch.length; _i < _len; _i++) {
-        key = keys_to_watch[_i];
+      watch_fn = (r = src.match(/^@(\S+)\(\)$/)) ? function() {
+        return fn.call({}, _controller.methods[r[1]].call(_controller));
+      } : (r = src.match(/^@(\S+)$/)) ? function() {
+        return fn.call({}, this.get(r[1]));
+      } : (r = src.match(__compute_match_regexp)) ? function() {
+        var scope;
+        scope = this;
+        return fn.call({}, src.replace(__compute_match_regexp, function(part) {
+          part = part.match(__compute_match_key_regexp);
+          return scope.get(part[1]);
+        }));
+      } : function() {
+        return fn.call({}, src);
+      };
+      _scope.$startGetWatches();
+      ret = watch_fn.call(_scope);
+      _ref = _scope.$stopGetWatches();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        key = _ref[_i];
         _scope.$watch(key, watch_fn);
       }
-      return watch_fn.call(_scope);
+      return ret;
     };
     return (function() {
       function _Class(init_data) {

@@ -173,15 +173,15 @@ _scopeCallWatch = (_scope, new_val, old_val, key) ->
   if typeof key is 'string' && key.charAt(0) == '$'
     _scopeCallAltWatch _scope, new_val, old_val, key
   else
-    if _scope._watchs[key]
-      fn.call _scope, new_val, old_val, key for fn in _scope._watchs[key]
+    if _scope._watches[key]
+      fn.call _scope, new_val, old_val, key for fn in _scope._watches[key]
     for child in _scope._childs
       unless child._data[key]?
         _scopeCallWatch child, new_val, old_val, key
 
 _scopeCallAltWatch = (_scope, new_val, key, type) ->
-  if _scope._watchs[type]
-    fn.call _scope, new_val, type, key for fn in _scope._watchs[type]
+  if _scope._watches[type]
+    fn.call _scope, new_val, type, key for fn in _scope._watches[type]
 
 class casua.Scope
 
@@ -192,11 +192,12 @@ class casua.Scope
       return new casua.ArrayScope init_data, parent
     else
       _scopeInitParent @, parent
-      @_watchs = {}
+      @_watches = {}
       @_data = {}
       @set key, value for key, value of init_data
 
   get: (key) ->
+    @_watch_lists.push key if @_watch_lists && @_watch_lists.indexOf(key) == -1
     ret = @_data[key]
     ret = @_parent.get(key) if !ret? && @_parent?
     ret
@@ -217,8 +218,17 @@ class casua.Scope
     delete @_data[key]
 
   $watch: (key, fn) ->
-    @_watchs[key] ||= []
-    @_watchs[key].push fn
+    @_watches[key] ||= []
+    @_watches[key].push fn
+
+  $startGetWatches: ->
+    @_watch_lists = []
+
+  $stopGetWatches: ->
+    lists = for one in @_watch_lists
+      one
+    delete @_watch_lists
+    lists
 
 class casua.ArrayScope extends casua.Scope
 
@@ -229,7 +239,7 @@ class casua.ArrayScope extends casua.Scope
       return new casua.Scope init_data, parent
     else
       _scopeInitParent @, parent
-      @_watchs = {}
+      @_watches = {}
       @_data = []
       @set idx, value for value, idx in init_data
 
@@ -241,7 +251,7 @@ class casua.ArrayScope extends casua.Scope
 
   each: (fn) ->
     for one, i in @_data
-      fn.call @, one, i
+      fn.call @, @get(i), i
 
   pop: -> @remove(@_data.length - 1)[0]
 
@@ -300,7 +310,7 @@ casua.defineController = (init_fn) ->
               when 'on'
                 _root.on r[2], _controller.methods[child]
               when 'html', 'text'
-                __nodeBind _root, r[1], _scope, child
+                __nodeBind _controller, _root, r[1], _scope, child
               when 'child'
                 _renderNode _controller, _scope.get(r[2]), _root, child
         else
@@ -309,7 +319,7 @@ casua.defineController = (init_fn) ->
           if typeof child is 'object'
             _renderNode _controller, _scope, node, child
           else
-            __nodeBind node, 'text', _scope, child
+            __nodeBind _controller, node, 'text', _scope, child
           node
 
   _renderNodes = (_controller, _scope, _root, template) ->
@@ -330,23 +340,20 @@ casua.defineController = (init_fn) ->
         _root.append node for node in nodes
     _scope.each (one, idx) -> add_fn.call {}, one, null, idx
 
-  __nodeBind = (_node, _method, _scope, src) ->
-    __computeBind _scope, src, (result) ->
+  __nodeBind = (_controller, _node, _method, _scope, src) ->
+    __computeBind _controller, _scope, src, (result) ->
       _node[_method].call _node, result
 
   __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g
   __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/
 
-  __computeBind = (_scope, src, fn) ->
+  __computeBind = (_controller, _scope, src, fn) ->
     keys_to_watch = []
-    watch_fn = if r = src.match(/^@(\S+)$/)
-      key = r[1]
-      keys_to_watch.push key
-      -> fn.call {}, @get(key)
+    watch_fn = if r = src.match(/^@(\S+)\(\)$/)
+      -> fn.call {}, _controller.methods[r[1]].call(_controller)
+    else if r = src.match(/^@(\S+)$/)
+      -> fn.call {}, @get(r[1])
     else if r = src.match __compute_match_regexp
-      for part in r
-        part = part.match __compute_match_key_regexp
-        keys_to_watch.push part[1]
       ->
         scope = @
         fn.call {}, src.replace __compute_match_regexp, (part) ->
@@ -354,9 +361,11 @@ casua.defineController = (init_fn) ->
           scope.get part[1]
     else
       -> fn.call {}, src
-    for key in keys_to_watch
-      _scope.$watch key, watch_fn
-    watch_fn.call _scope
+    
+    _scope.$startGetWatches()
+    ret = watch_fn.call _scope
+    _scope.$watch key, watch_fn for key in _scope.$stopGetWatches()
+    ret
 
   class
     constructor: (init_data) ->
