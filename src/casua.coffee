@@ -282,22 +282,19 @@ class casua.ArrayScope extends casua.Scope
     _scopeCallWatch @, pos, null, '$move'
     @
 
-casua.defineController = (fn) ->
+casua.defineController = (init_fn) ->
 
   _renderNode = (_controller, _scope, _root, template) ->
     if _scope instanceof casua.ArrayScope
       _renderNodes _controller, _scope, _root, template
+    else if template['@controller']
+      new_template = _shallowCopy template
+      new_controller = new template['@controller'](_scope)
+      delete new_template['@controller']
+      _renderNode new_controller, _scope, _root, new_template
     else
       for node_meta, child of template
-        unless node_meta.charAt(0) == '@'
-          node = new casua.Node node_meta
-          _root.append node
-          if typeof child is 'object'
-            _renderNode _controller, _scope, node, child
-          else
-            __nodeBind node, 'text', _scope, child
-          node
-        else
+        if node_meta.charAt(0) == '@'
           if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)
             switch r[1]
               when 'on'
@@ -306,6 +303,14 @@ casua.defineController = (fn) ->
                 __nodeBind _root, r[1], _scope, child
               when 'child'
                 _renderNode _controller, _scope.get(r[2]), _root, child
+        else
+          node = new casua.Node node_meta
+          _root.append node
+          if typeof child is 'object'
+            _renderNode _controller, _scope, node, child
+          else
+            __nodeBind node, 'text', _scope, child
+          node
 
   _renderNodes = (_controller, _scope, _root, template) ->
     _root.empty()
@@ -356,7 +361,7 @@ casua.defineController = (fn) ->
   class
     constructor: (init_data) ->
       @scope = new casua.Scope init_data
-      @methods = fn.call @, @scope, @
+      @methods = init_fn.call @, @scope, @
 
     renderAt: (container, template) ->
       _renderNode @, @scope, (new casua.Node container).empty(), template

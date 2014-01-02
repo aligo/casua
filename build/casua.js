@@ -521,26 +521,22 @@ Released under the MIT license
 
   })(casua.Scope);
 
-  casua.defineController = function(fn) {
+  casua.defineController = function(init_fn) {
     var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
-      var child, node, node_meta, r, _results;
+      var child, new_controller, new_template, node, node_meta, r, _results;
       if (_scope instanceof casua.ArrayScope) {
         return _renderNodes(_controller, _scope, _root, template);
+      } else if (template['@controller']) {
+        new_template = _shallowCopy(template);
+        new_controller = new template['@controller'](_scope);
+        delete new_template['@controller'];
+        return _renderNode(new_controller, _scope, _root, new_template);
       } else {
         _results = [];
         for (node_meta in template) {
           child = template[node_meta];
-          if (node_meta.charAt(0) !== '@') {
-            node = new casua.Node(node_meta);
-            _root.append(node);
-            if (typeof child === 'object') {
-              _renderNode(_controller, _scope, node, child);
-            } else {
-              __nodeBind(node, 'text', _scope, child);
-            }
-            _results.push(node);
-          } else {
+          if (node_meta.charAt(0) === '@') {
             if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
               switch (r[1]) {
                 case 'on':
@@ -559,6 +555,15 @@ Released under the MIT license
             } else {
               _results.push(void 0);
             }
+          } else {
+            node = new casua.Node(node_meta);
+            _root.append(node);
+            if (typeof child === 'object') {
+              _renderNode(_controller, _scope, node, child);
+            } else {
+              __nodeBind(node, 'text', _scope, child);
+            }
+            _results.push(node);
           }
         }
         return _results;
@@ -657,7 +662,7 @@ Released under the MIT license
     return (function() {
       function _Class(init_data) {
         this.scope = new casua.Scope(init_data);
-        this.methods = fn.call(this, this.scope, this);
+        this.methods = init_fn.call(this, this.scope, this);
       }
 
       _Class.prototype.renderAt = function(container, template) {

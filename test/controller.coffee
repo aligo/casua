@@ -124,3 +124,19 @@ test 'CST @child ArrayScope', ->
 
   lists.sort (a, b) -> a.get('no') - b.get('no')
   equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li><li>task3</li>', 'sorted childs'
+
+test 'CST @controller', ->
+  testController = casua.defineController ->
+  childController = casua.defineController (scope) ->
+    scope.set 'name', 'task' + scope.get('no')
+  testCtrlInst = new testController
+    lists: []
+  lists = testCtrlInst.scope.get('lists')
+  fragment1 = testCtrlInst.render
+    'ul':
+      '@child lists':
+        '@controller': childController
+        'li': '{{name}}'
+  lists.push { no: 1 }
+  lists.push { no: 2 }
+  equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li>', '2 childs'
