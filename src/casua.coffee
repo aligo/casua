@@ -86,7 +86,7 @@ class casua.Node
           el.id = r[1]
         _addNodes @, el
         for attr in attrs_data
-          if r = attr.match /^([^=]+)(?:=(['"])(.+?)\2)?$/
+          if attr.charAt(0) != '#' && r = attr.match /^([^=]+)(?:=(['"])(.+?)\2)?$/
             @attr r[1], ( r[3] || '' )
       else
         div = document.createElement 'div'
@@ -151,8 +151,13 @@ class casua.Node
     @
 
   remove: ->
-    _forEach @, ->
-      @parentNode.removeChild @ if @parentNode
+    _forEach @, -> @parentNode.removeChild @ if @parentNode
+    @
+
+  replaceWith: (node) ->
+    _forEach @, (i, from) -> 
+      _forEach node, (j, to) ->
+        from.parentNode.replaceChild to, from if from.parentNode
     @
 
 _scopeInitParent = (_scope, _parent) ->
@@ -313,6 +318,8 @@ casua.defineController = (init_fn) ->
                 __nodeBind _controller, _root, r[1], _scope, child
               when 'child'
                 _renderNode _controller, _scope.get(r[2]), _root, child
+              when 'if'
+                __nodeCondition _controller, _root, r[1], _scope, child
         else
           node = new casua.Node node_meta
           _root.append node
@@ -343,6 +350,18 @@ casua.defineController = (init_fn) ->
   __nodeBind = (_controller, _node, _method, _scope, src) ->
     __computeBind _controller, _scope, src, (result) ->
       _node[_method].call _node, result
+
+  __nodeCondition = (_controller, _node, _method, _scope, src) ->
+    cur_node = true_node = _node
+    false_node = new casua.Node 'div'
+    false_node.attr 'style', 'display: none;'
+    __computeBind _controller, _scope, src, (result) ->
+      if result
+        cur_node.replaceWith true_node
+        cur_node = true_node
+      else
+        cur_node.replaceWith false_node
+        cur_node = false_node
 
   __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g
   __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/

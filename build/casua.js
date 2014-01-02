@@ -145,7 +145,7 @@ Released under the MIT license
           _addNodes(this, el);
           for (_i = 0, _len = attrs_data.length; _i < _len; _i++) {
             attr = attrs_data[_i];
-            if (r = attr.match(/^([^=]+)(?:=(['"])(.+?)\2)?$/)) {
+            if (attr.charAt(0) !== '#' && (r = attr.match(/^([^=]+)(?:=(['"])(.+?)\2)?$/))) {
               this.attr(r[1], r[3] || '');
             }
           }
@@ -259,6 +259,17 @@ Released under the MIT license
         if (this.parentNode) {
           return this.parentNode.removeChild(this);
         }
+      });
+      return this;
+    };
+
+    Node.prototype.replaceWith = function(node) {
+      _forEach(this, function(i, from) {
+        return _forEach(node, function(j, to) {
+          if (from.parentNode) {
+            return from.parentNode.replaceChild(to, from);
+          }
+        });
       });
       return this;
     };
@@ -545,7 +556,7 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(init_fn) {
-    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, _renderNode, _renderNodes;
+    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
       var child, new_controller, new_template, node, node_meta, r, _results;
       if (_scope instanceof casua.ArrayScope) {
@@ -571,6 +582,9 @@ Released under the MIT license
                   break;
                 case 'child':
                   _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
+                  break;
+                case 'if':
+                  _results.push(__nodeCondition(_controller, _root, r[1], _scope, child));
                   break;
                 default:
                   _results.push(void 0);
@@ -641,6 +655,21 @@ Released under the MIT license
     __nodeBind = function(_controller, _node, _method, _scope, src) {
       return __computeBind(_controller, _scope, src, function(result) {
         return _node[_method].call(_node, result);
+      });
+    };
+    __nodeCondition = function(_controller, _node, _method, _scope, src) {
+      var cur_node, false_node, true_node;
+      cur_node = true_node = _node;
+      false_node = new casua.Node('div');
+      false_node.attr('style', 'display: none;');
+      return __computeBind(_controller, _scope, src, function(result) {
+        if (result) {
+          cur_node.replaceWith(true_node);
+          return cur_node = true_node;
+        } else {
+          cur_node.replaceWith(false_node);
+          return cur_node = false_node;
+        }
       });
     };
     __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g;

@@ -88,7 +88,7 @@ test 'CST @html', ->
   equal fragment2[0].children[0].innerHTML, 'changed', 'scope value changed 1'
   equal fragment3[0].children[0].innerHTML, 'changed is good.', 'scope value changed 2'
   equal fragment4[0].children[0].innerHTML, 'changed computed', 'changed compute method'
-  
+
   scope.set 'test2', 'is better'
   equal fragment3[0].children[0].innerHTML, 'changed is better.', 'scope value changed 3'
 
@@ -149,3 +149,24 @@ test 'CST @controller', ->
   lists.push { no: 1 }
   lists.push { no: 2 }
   equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li>', '2 childs'
+
+test 'CST @if', ->
+  testController = casua.defineController ->
+  testCtrlInst = new testController
+    bool1: true
+    bool2: false
+  scope = testCtrlInst.scope
+  fragment1 = testCtrlInst.render
+    '.test':
+      'span #1':
+        '@if': '@bool1'
+        '@text': 'bool1 is true'
+      'span #2':
+        '@if': '@bool2'
+        '@text': 'bool2 is true'
+  equal fragment1[0].children[0].innerHTML, '<span>bool1 is true</span><div style=\"display: none;\"></div>', 'ok'
+
+  scope.set 'bool1', false
+  scope.set 'bool2', true
+
+  equal fragment1[0].children[0].innerHTML, '<div style=\"display: none;\"></div><span>bool2 is true</span>', 'ok'
