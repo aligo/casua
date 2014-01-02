@@ -72,4 +72,16 @@ test 'Should can trigger()', ->
     clicked = event.test_data
   node.trigger 'click', { test_data: 5 }
   equal clicked, 5, 'ok'
-  
+
+test 'Should can remove()', ->
+  container = new casua.Node 'div'
+  node = new casua.Node 'h1'
+  el = node[0]
+  container.append node
+  node.text 'test'
+  equal container.html(), '<h1>test</h1>', 'append'
+  node.remove()
+  equal container.html(), '', 'remove()'
+  equal node[0] == el, true, 'element still exists'
+  container.append node
+  equal container.html(), '<h1>test</h1>', 're-append'
