@@ -6,7 +6,6 @@ Released under the MIT license
 ###
 
 
-
 _shallowCopy = (src, dst = {}) ->
   dst[key] = value for key, value of src
   dst
@@ -353,22 +352,29 @@ casua.defineController = (init_fn) ->
   __nodeCondition = (_controller, _node, _method, _scope, src) ->
     cur_node = true_node = _node
     false_node = new casua.Node '<!-- -->'
-    __computeBind _controller, _scope, src, (result) ->
+    __computeBind _controller, _scope, src, ( (result) ->
       if result
         cur_node.replaceWith true_node
         cur_node = true_node
       else
         cur_node.replaceWith false_node
         cur_node = false_node
+    ), true
 
   __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g
   __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/
 
-  __computeBind = (_controller, _scope, src, fn) ->
+  __compute_scope_regexp = /@(\S+)/g
+  __compute_scope_key_regexp = /^@(\S+)$/
+
+  __compute_controller_regexp = /@(\S+)\(\)/g
+  __compute_controller_method_regexp = /^@(\S+)\(\)$/
+
+  __computeBind = (_controller, _scope, src, fn, to_eval = false) ->
     keys_to_watch = []
-    watch_fn = if r = src.match(/^@(\S+)\(\)$/)
+    watch_fn = if r = src.match __compute_controller_method_regexp
       -> fn.call {}, _controller.methods[r[1]].call(_controller)
-    else if r = src.match(/^@(\S+)$/)
+    else if r = src.match __compute_scope_key_regexp
       -> fn.call {}, @get(r[1])
     else if r = src.match __compute_match_regexp
       ->
@@ -376,9 +382,16 @@ casua.defineController = (init_fn) ->
         fn.call {}, src.replace __compute_match_regexp, (part) ->
           part = part.match __compute_match_key_regexp
           scope.get part[1]
+    else if to_eval
+      src = src.replace __compute_controller_regexp, (part) ->
+        part = part.match __compute_controller_method_regexp
+        '_controller.methods.' + part[1] + '.call(_controller)'
+      src = src.replace __compute_scope_regexp, (part) ->
+        part = part.match __compute_scope_key_regexp
+        '_scope.get("' + part[1] + '")'
+      -> fn.call {}, eval(src)
     else
       -> fn.call {}, src
-    
     _scope.$startGetWatches()
     ret = watch_fn.call _scope
     _scope.$watch key, watch_fn for key in _scope.$stopGetWatches()

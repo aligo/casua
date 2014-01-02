@@ -559,7 +559,7 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(init_fn) {
-    var __computeBind, __compute_match_key_regexp, __compute_match_regexp, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
+    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
       var child, new_controller, new_template, node, node_meta, r, _results;
       if (_scope instanceof casua.ArrayScope) {
@@ -664,7 +664,7 @@ Released under the MIT license
       var cur_node, false_node, true_node;
       cur_node = true_node = _node;
       false_node = new casua.Node('<!-- -->');
-      return __computeBind(_controller, _scope, src, function(result) {
+      return __computeBind(_controller, _scope, src, (function(result) {
         if (result) {
           cur_node.replaceWith(true_node);
           return cur_node = true_node;
@@ -672,16 +672,23 @@ Released under the MIT license
           cur_node.replaceWith(false_node);
           return cur_node = false_node;
         }
-      });
+      }), true);
     };
     __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g;
     __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/;
-    __computeBind = function(_controller, _scope, src, fn) {
+    __compute_scope_regexp = /@(\S+)/g;
+    __compute_scope_key_regexp = /^@(\S+)$/;
+    __compute_controller_regexp = /@(\S+)\(\)/g;
+    __compute_controller_method_regexp = /^@(\S+)\(\)$/;
+    __computeBind = function(_controller, _scope, src, fn, to_eval) {
       var key, keys_to_watch, r, ret, watch_fn, _i, _len, _ref;
+      if (to_eval == null) {
+        to_eval = false;
+      }
       keys_to_watch = [];
-      watch_fn = (r = src.match(/^@(\S+)\(\)$/)) ? function() {
+      watch_fn = (r = src.match(__compute_controller_method_regexp)) ? function() {
         return fn.call({}, _controller.methods[r[1]].call(_controller));
-      } : (r = src.match(/^@(\S+)$/)) ? function() {
+      } : (r = src.match(__compute_scope_key_regexp)) ? function() {
         return fn.call({}, this.get(r[1]));
       } : (r = src.match(__compute_match_regexp)) ? function() {
         var scope;
@@ -690,7 +697,15 @@ Released under the MIT license
           part = part.match(__compute_match_key_regexp);
           return scope.get(part[1]);
         }));
-      } : function() {
+      } : to_eval ? (src = src.replace(__compute_controller_regexp, function(part) {
+        part = part.match(__compute_controller_method_regexp);
+        return '_controller.methods.' + part[1] + '.call(_controller)';
+      }), src = src.replace(__compute_scope_regexp, function(part) {
+        part = part.match(__compute_scope_key_regexp);
+        return '_scope.get("' + part[1] + '")';
+      }), function() {
+        return fn.call({}, eval(src));
+      }) : function() {
         return fn.call({}, src);
       };
       _scope.$startGetWatches();

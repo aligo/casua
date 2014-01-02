@@ -151,7 +151,8 @@ test 'CST @controller', ->
   equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li>', '2 childs'
 
 test 'CST @if', ->
-  testController = casua.defineController ->
+  testController = casua.defineController (scope) ->
+    getBool2: -> scope.get('bool2')
   testCtrlInst = new testController
     bool1: true
     bool2: false
@@ -162,7 +163,7 @@ test 'CST @if', ->
         '@if': '@bool1'
         '@text': 'bool1 is true'
       'span #2':
-        '@if': '@bool2'
+        '@if': '@getBool2()'
         '@text': 'bool2 is true'
   equal fragment1[0].children[0].innerHTML, '<span>bool1 is true</span><!-- -->', 'ok'
 
@@ -170,3 +171,14 @@ test 'CST @if', ->
   scope.set 'bool2', true
 
   equal fragment1[0].children[0].innerHTML, '<!-- --><span>bool2 is true</span>', 'ok'
+
+  fragment2 = testCtrlInst.render
+    '.test':
+      'span #1':
+        '@if': '@bool1 && true'
+        '@text': 'bool1 is true'
+      'span #2':
+        '@if': '@getBool2() && true'
+        '@text': 'bool2 is true'
+
+  equal fragment2[0].children[0].innerHTML, '<!-- --><span>bool2 is true</span>', 'ok'
