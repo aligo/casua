@@ -436,13 +436,12 @@ Released under the MIT license
     };
 
     ArrayScope.prototype.push = function() {
-      var one, _i, _len, _results;
-      _results = [];
+      var one, _i, _len;
       for (_i = 0, _len = arguments.length; _i < _len; _i++) {
         one = arguments[_i];
-        _results.push(this.set(this._data.length, one));
+        this.set(this._data.length, one);
       }
-      return _results;
+      return this._data.length;
     };
 
     ArrayScope.prototype.unshift = function() {
@@ -463,7 +462,59 @@ Released under the MIT license
         }
         return _results;
       }).apply(this, arguments);
-      return _scopeCallWatch(this, pos, null, '$move');
+      _scopeCallWatch(this, pos, null, '$move');
+      return this._data.length;
+    };
+
+    ArrayScope.prototype.reverse = function() {
+      var i, one, pos;
+      this._data.reverse();
+      pos = (function() {
+        var _i, _len, _ref, _results;
+        _ref = this._data;
+        _results = [];
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          one = _ref[i];
+          _results.push(this._data.length - 1 - i);
+        }
+        return _results;
+      }).call(this);
+      _scopeCallWatch(this, pos, null, '$move');
+      return this;
+    };
+
+    ArrayScope.prototype.sort = function(fn) {
+      var i, one, pos, self, to_sort;
+      self = this;
+      to_sort = (function() {
+        var _i, _len, _ref, _results;
+        _ref = this._data;
+        _results = [];
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          one = _ref[i];
+          _results.push({
+            e: one,
+            o: i
+          });
+        }
+        return _results;
+      }).call(this);
+      to_sort.sort(function(a, b) {
+        return fn.call(self, a.e, b.e);
+      });
+      pos = [];
+      this._data = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (i = _i = 0, _len = to_sort.length; _i < _len; i = ++_i) {
+          one = to_sort[i];
+          pos[one.o] = i;
+          _results.push(one.e);
+        }
+        return _results;
+      })();
+      _scopeCallWatch(this, pos, null, '$move');
+      return this;
     };
 
     return ArrayScope;

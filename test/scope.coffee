@@ -111,7 +111,7 @@ test 'Should can watch ArrayScope', ->
 
   equal scope.get('arr').pop(), 'test', 'watch pop() -> $delete'
   deepEqual changed.pop(), ['test', '$delete', 2], 'watch shift() -> $delete'
-  
+
   scope.get('arr').unshift(1, 2)
   deepEqual changed.shift(), [1, '$add', 2], 'watch $add'
   deepEqual changed.shift(), [1, undefined, 2], 'watch $add'
@@ -121,3 +121,15 @@ test 'Should can watch ArrayScope', ->
 
   scope.set 'test', 'change'
   deepEqual changed.pop(), ['change', -1, 'test'], 'watch parent'
+
+test 'Should can watch ArrayScope 2', ->
+  changed = []
+  watch_fn = (n, o, k) -> changed.push [n, o, k]
+  arr = new casua.Scope [5, 3, 2, 1, 4, 0]
+  arr.$watch '$move', watch_fn
+  arr.reverse()
+  deepEqual changed.shift(), [ [5, 4, 3, 2, 1, 0], '$move', null], 'watch reverse() -> $move'
+
+  arr.sort (a, b) -> a - b
+  deepEqual changed.shift(), [ [0, 4, 1, 2, 3, 5], '$move', null], 'watch sort() -> $move'
+  

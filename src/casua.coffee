@@ -247,7 +247,9 @@ class casua.ArrayScope extends casua.Scope
 
   shift: -> @remove(0)[0]
 
-  push: -> @set @_data.length, one for one in arguments
+  push: -> 
+    @set @_data.length, one for one in arguments
+    @_data.length
 
   unshift: ->
     _old_length = @_data.length
@@ -258,6 +260,27 @@ class casua.ArrayScope extends casua.Scope
       else
         i - _old_length
     _scopeCallWatch @, pos, null, '$move'
+    @_data.length
+
+  reverse: ->
+    @_data.reverse()
+    pos = for one, i in @_data
+      @_data.length - 1 - i
+    _scopeCallWatch @, pos, null, '$move'
+    @
+
+  sort: (fn) ->
+    self = @
+    to_sort = for one, i in @_data
+      e: one
+      o: i
+    to_sort.sort (a, b) -> fn.call self, a.e, b.e
+    pos = []
+    @_data = for one, i in to_sort
+      pos[one.o] = i
+      one.e
+    _scopeCallWatch @, pos, null, '$move'
+    @
 
 casua.defineController = (fn) ->
 
