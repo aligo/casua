@@ -1,4 +1,4 @@
-rina_files = [
+casua_files = [
   'build'
   'src'
 ]
@@ -6,6 +6,11 @@ rina_files = [
 qunit_files = [
   '.tmp/test'
   'test'
+]
+
+examples_files = [
+  'examples'
+  'examples'
 ]
 
 {spawn, exec} = require 'child_process'
@@ -46,7 +51,8 @@ compile = (watch, callback) ->
   if watch
     options.unshift '-w'
     launch 'coffee', options.concat qunit_files
-  launch 'coffee', options.concat(rina_files), callback
+  launch 'coffee', options.concat examples_files
+  launch 'coffee', options.concat(casua_files), callback
 
 build = (callback) ->
   exec 'uglifyjs build/casua.js -o build/casua.min.js -c -m', [], callback

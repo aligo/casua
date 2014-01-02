@@ -166,6 +166,9 @@ Released under the MIT license
 
     Node.prototype.attr = function(name, value) {
       name = name.toLowerCase();
+      if (name === 'value') {
+        return this.value(value);
+      }
       if (value != null) {
         _forEach(this, function() {
           return this.setAttribute(name, value);
@@ -173,6 +176,17 @@ Released under the MIT license
         return this;
       } else {
         return this[0].getAttribute(name, 2);
+      }
+    };
+
+    Node.prototype.value = function(new_value) {
+      if (new_value != null) {
+        _forEach(this, function() {
+          return this.value = new_value;
+        });
+        return this;
+      } else {
+        return this[0].value;
       }
     };
 
@@ -559,7 +573,7 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(init_fn) {
-    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
+    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
       var child, new_controller, new_template, node, node_meta, r, _results;
       if (_scope instanceof casua.ArrayScope) {
@@ -581,7 +595,11 @@ Released under the MIT license
                   break;
                 case 'html':
                 case 'text':
+                case 'value':
                   _results.push(__nodeBind(_controller, _root, r[1], _scope, child));
+                  break;
+                case 'attr':
+                  _results.push(__nodeAttrBind(_controller, _root, r[2], _scope, child));
                   break;
                 case 'child':
                   _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
@@ -658,6 +676,11 @@ Released under the MIT license
     __nodeBind = function(_controller, _node, _method, _scope, src) {
       return __computeBind(_controller, _scope, src, function(result) {
         return _node[_method].call(_node, result);
+      });
+    };
+    __nodeAttrBind = function(_controller, _node, attr, _scope, src) {
+      return __computeBind(_controller, _scope, src, function(result) {
+        return _node.attr(attr, result);
       });
     };
     __nodeCondition = function(_controller, _node, _method, _scope, src) {
