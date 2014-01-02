@@ -155,9 +155,8 @@ class casua.Node
     @
 
   replaceWith: (node) ->
-    _forEach @, (i, from) -> 
-      _forEach node, (j, to) ->
-        from.parentNode.replaceChild to, from if from.parentNode
+    node = new casua.Node node if typeof node is 'string'
+    _forEach @, (i, from) -> _forEach node, (j, to) -> from.parentNode.replaceChild to, from if from.parentNode
     @
 
 _scopeInitParent = (_scope, _parent) ->
@@ -353,8 +352,7 @@ casua.defineController = (init_fn) ->
 
   __nodeCondition = (_controller, _node, _method, _scope, src) ->
     cur_node = true_node = _node
-    false_node = new casua.Node 'div'
-    false_node.attr 'style', 'display: none;'
+    false_node = new casua.Node '<!-- -->'
     __computeBind _controller, _scope, src, (result) ->
       if result
         cur_node.replaceWith true_node

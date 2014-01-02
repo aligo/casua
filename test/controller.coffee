@@ -164,9 +164,9 @@ test 'CST @if', ->
       'span #2':
         '@if': '@bool2'
         '@text': 'bool2 is true'
-  equal fragment1[0].children[0].innerHTML, '<span>bool1 is true</span><div style=\"display: none;\"></div>', 'ok'
+  equal fragment1[0].children[0].innerHTML, '<span>bool1 is true</span><!-- -->', 'ok'
 
   scope.set 'bool1', false
   scope.set 'bool2', true
 
-  equal fragment1[0].children[0].innerHTML, '<div style=\"display: none;\"></div><span>bool2 is true</span>', 'ok'
+  equal fragment1[0].children[0].innerHTML, '<!-- --><span>bool2 is true</span>', 'ok'

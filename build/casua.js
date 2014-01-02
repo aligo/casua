@@ -264,6 +264,9 @@ Released under the MIT license
     };
 
     Node.prototype.replaceWith = function(node) {
+      if (typeof node === 'string') {
+        node = new casua.Node(node);
+      }
       _forEach(this, function(i, from) {
         return _forEach(node, function(j, to) {
           if (from.parentNode) {
@@ -660,8 +663,7 @@ Released under the MIT license
     __nodeCondition = function(_controller, _node, _method, _scope, src) {
       var cur_node, false_node, true_node;
       cur_node = true_node = _node;
-      false_node = new casua.Node('div');
-      false_node.attr('style', 'display: none;');
+      false_node = new casua.Node('<!-- -->');
       return __computeBind(_controller, _scope, src, function(result) {
         if (result) {
           cur_node.replaceWith(true_node);
