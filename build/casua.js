@@ -388,43 +388,10 @@ Released under the MIT license
   })();
 
   casua.ArrayScope = (function(_super) {
-    var method, _fn, _i, _len, _ref;
-
     __extends(ArrayScope, _super);
 
-    _ref = ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift'];
-    _fn = function(method) {
-      return ArrayScope.prototype[method] = function() {
-        var idx, one, ret, value, _array, _j, _len1;
-        _array = (function() {
-          var _j, _len1, _ref1, _results;
-          _ref1 = this._data;
-          _results = [];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            one = _ref1[_j];
-            _results.push(one);
-          }
-          return _results;
-        }).call(this);
-        ret = _array[method].apply(_array, arguments);
-        while (_array.length < this._data.length) {
-          this.remove(this._data.length - 1);
-        }
-        idx = 0;
-        for (idx = _j = 0, _len1 = _array.length; _j < _len1; idx = ++_j) {
-          value = _array[idx];
-          this.set(idx, value);
-        }
-        return ret;
-      };
-    };
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      method = _ref[_i];
-      _fn(method);
-    }
-
     function ArrayScope(init_data, parent) {
-      var idx, value, _j, _len1;
+      var idx, value, _i, _len;
       if (init_data instanceof casua.Scope) {
         return init_data;
       } else if (init_data.length == null) {
@@ -433,7 +400,7 @@ Released under the MIT license
         _scopeInitParent(this, parent);
         this._watchs = {};
         this._data = [];
-        for (idx = _j = 0, _len1 = init_data.length; _j < _len1; idx = ++_j) {
+        for (idx = _i = 0, _len = init_data.length; _i < _len; idx = ++_i) {
           value = init_data[idx];
           this.set(idx, value);
         }
@@ -450,14 +417,53 @@ Released under the MIT license
     };
 
     ArrayScope.prototype.each = function(fn) {
-      var i, one, _j, _len1, _ref1, _results;
-      _ref1 = this._data;
+      var i, one, _i, _len, _ref, _results;
+      _ref = this._data;
       _results = [];
-      for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
-        one = _ref1[i];
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        one = _ref[i];
         _results.push(fn.call(this, one, i));
       }
       return _results;
+    };
+
+    ArrayScope.prototype.pop = function() {
+      return this.remove(this._data.length - 1)[0];
+    };
+
+    ArrayScope.prototype.shift = function() {
+      return this.remove(0)[0];
+    };
+
+    ArrayScope.prototype.push = function() {
+      var one, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = arguments.length; _i < _len; _i++) {
+        one = arguments[_i];
+        _results.push(this.set(this._data.length, one));
+      }
+      return _results;
+    };
+
+    ArrayScope.prototype.unshift = function() {
+      var i, one, pos, _old_length;
+      _old_length = this._data.length;
+      this.push.apply(this, arguments);
+      pos = (function() {
+        var _i, _len, _ref, _results;
+        _ref = this._data;
+        _results = [];
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          one = _ref[i];
+          if (i < _old_length) {
+            _results.push(i + arguments.length);
+          } else {
+            _results.push(i - _old_length);
+          }
+        }
+        return _results;
+      }).apply(this, arguments);
+      return _scopeCallWatch(this, pos, null, '$move');
     };
 
     return ArrayScope;
@@ -509,6 +515,7 @@ Released under the MIT license
     };
     _renderNodes = function(_controller, _scope, _root, template) {
       var add_fn, _nodes;
+      _root.empty();
       _nodes = [];
       add_fn = function(new_scope, type, idx) {
         return _nodes[idx] = _renderNode(_controller, new_scope, _root, template);
@@ -521,6 +528,30 @@ Released under the MIT license
         for (_i = 0, _len = nodes.length; _i < _len; _i++) {
           node = nodes[_i];
           _results.push(node.remove());
+        }
+        return _results;
+      });
+      _scope.$watch('$move', function(new_pos, type) {
+        var new_po, node, nodes, old_po, _i, _j, _len, _len1, _new_nodes, _results;
+        _new_nodes = [];
+        for (old_po = _i = 0, _len = new_pos.length; _i < _len; old_po = ++_i) {
+          new_po = new_pos[old_po];
+          _new_nodes[new_po] = _nodes[old_po];
+        }
+        _nodes = _new_nodes;
+        _root.empty();
+        _results = [];
+        for (_j = 0, _len1 = _nodes.length; _j < _len1; _j++) {
+          nodes = _nodes[_j];
+          _results.push((function() {
+            var _k, _len2, _results1;
+            _results1 = [];
+            for (_k = 0, _len2 = nodes.length; _k < _len2; _k++) {
+              node = nodes[_k];
+              _results1.push(_root.append(node));
+            }
+            return _results1;
+          })());
         }
         return _results;
       });

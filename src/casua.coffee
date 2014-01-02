@@ -222,19 +222,6 @@ class casua.Scope
 
 class casua.ArrayScope extends casua.Scope
 
-  for method in ['pop', 'push', 'reverse', 'shift', 'sort', 'slice', 'unshift']
-    ( (method) ->
-      ArrayScope.prototype[method] = ->
-        _array = for one in @_data
-          one
-        ret = _array[method].apply _array, arguments
-        while _array.length < @_data.length
-          @remove( @_data.length - 1 )
-        idx = 0
-        @set idx, value for value, idx in _array
-        ret
-    )(method)
-
   constructor: (init_data, parent) ->
     if init_data instanceof casua.Scope
       return init_data
@@ -255,7 +242,23 @@ class casua.ArrayScope extends casua.Scope
   each: (fn) ->
     for one, i in @_data
       fn.call @, one, i
-     
+
+  pop: -> @remove(@_data.length - 1)[0]
+
+  shift: -> @remove(0)[0]
+
+  push: -> @set @_data.length, one for one in arguments
+
+  unshift: ->
+    _old_length = @_data.length
+    @push.apply @, arguments
+    pos = for one, i in @_data
+      if i < _old_length
+        i + arguments.length
+      else
+        i - _old_length
+    _scopeCallWatch @, pos, null, '$move'
+
 casua.defineController = (fn) ->
 
   _renderNode = (_controller, _scope, _root, template) ->
@@ -282,6 +285,7 @@ casua.defineController = (fn) ->
                 _renderNode _controller, _scope.get(r[2]), _root, child
 
   _renderNodes = (_controller, _scope, _root, template) ->
+    _root.empty()
     _nodes = []
     add_fn = (new_scope, type, idx) ->
       _nodes[idx] = _renderNode _controller, new_scope, _root, template
@@ -289,6 +293,13 @@ casua.defineController = (fn) ->
     _scope.$watch '$delete', (new_scope, type, idx) ->
       nodes = _nodes.splice(idx, 1)[0]
       node.remove() for node in nodes
+    _scope.$watch '$move', (new_pos, type) ->
+      _new_nodes = []
+      _new_nodes[new_po] = _nodes[old_po] for new_po, old_po in new_pos
+      _nodes = _new_nodes
+      _root.empty()
+      for nodes in _nodes
+        _root.append node for node in nodes
     _scope.each (one, idx) -> add_fn.call {}, one, null, idx
 
   __nodeBind = (_node, _method, _scope, src) ->

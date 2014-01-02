@@ -24,9 +24,12 @@ test 'array scope', ->
 
   equal container.html(), '<li><span>one</span></li><li><span>two</span></li>', 'render'  
   array.push { title: 'three' }
-  equal container.html(), '<li><span>one</span></li><li><span>two</span></li><li><span>three</span></li>', 'warch $add'
+  equal container.html(), '<li><span>one</span></li><li><span>two</span></li><li><span>three</span></li>', 'watch $add'
   array.shift()
-  equal container.html(), '<li><span>two</span></li><li><span>three</span></li>', 'warch $delete'
+  equal container.html(), '<li><span>two</span></li><li><span>three</span></li>', 'watch $delete'
+  array.unshift
+    title: 'one'
+  equal container.html(), '<li><span>one</span></li><li><span>two</span></li><li><span>three</span></li>', 'watch $move'
 
 test 'CST @on', ->
   clicked = 0

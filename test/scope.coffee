@@ -98,6 +98,7 @@ test 'Should can watch ArrayScope', ->
   scope.get('arr').$watch 'test', watch_fn
   scope.get('arr').$watch '$add', watch_fn
   scope.get('arr').$watch '$delete', watch_fn
+  scope.get('arr').$watch '$move', watch_fn
   scope.get('arr').push 4
   deepEqual changed.pop(), [4, '$add', 3], 'watch $add'
 
@@ -105,11 +106,18 @@ test 'Should can watch ArrayScope', ->
   scope.get('arr').set 3, 'test'
   deepEqual changed.pop(), ['test', 4, 3], 'watch set()'
 
-  equal scope.get('arr').shift(), 0, 'watch $delete'
-  deepEqual changed.pop(), ['test', 2, 2], 'watch $delete'
-  deepEqual changed.pop(), [2, 1, 1], 'watch $delete'
-  deepEqual changed.pop(), [1, 0, 0], 'watch $delete'
-  deepEqual changed.pop(), ['test', '$delete', 3], 'watch $delete'
+  equal scope.get('arr').shift(), 0, 'watch shift() -> $delete'
+  deepEqual changed.pop(), [0, '$delete', 0], 'watch shift() -> $delete'
+
+  equal scope.get('arr').pop(), 'test', 'watch pop() -> $delete'
+  deepEqual changed.pop(), ['test', '$delete', 2], 'watch shift() -> $delete'
+  
+  scope.get('arr').unshift(1, 2)
+  deepEqual changed.shift(), [1, '$add', 2], 'watch $add'
+  deepEqual changed.shift(), [1, undefined, 2], 'watch $add'
+  deepEqual changed.shift(), [2, '$add', 3], 'watch $add'
+  deepEqual changed.shift(), [2, undefined, 3], 'watch $add'
+  deepEqual changed.shift(), [ [2, 3, 0, 1], '$move', null], 'watch unshift() -> $move'
 
   scope.set 'test', 'change'
   deepEqual changed.pop(), ['change', -1, 'test'], 'watch parent'
