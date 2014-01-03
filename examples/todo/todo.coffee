@@ -6,15 +6,12 @@ TasksCtrl = casua.defineController (scope) ->
     scope.set 'new_task_name', ''
     false
 TaskCtrl = casua.defineController (scope) ->
-
-  finishTask: (e) ->
-    scope.set 'done', e.target.checked
   taskClass: ->
     if scope.get 'done'
       'is-done'
     else
       ''
-  
+      
 app_node = new casua.Node document.getElementById('todo-app')
 
 template =
@@ -23,7 +20,7 @@ template =
       '@controller': TaskCtrl
       'li':
         'input type="checkbox"':
-          '@on click': 'finishTask'
+          '@attr checked': '@done'
         '@attr class': '@taskClass()'
         'span':
           '@html': 'Task {{name}}'

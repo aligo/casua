@@ -12,7 +12,7 @@ test 'Should can parse node_meta to build DOM node', ->
   tests_data =
     '.a-div': '<div class="a-div"></div>'
     'p.p-1#p-id.p-2': '<p id="p-id" class="p-1 p-2"></p>'
-    'a href="/?a=b" target=\'_blank\' data-test="te\'st" only-prop': '<a only-prop=\"\" data-test=\"te\'st\" target=\"_blank\" href=\"/?a=b\"></a>'
+    'a href="/?a=b" target=\'_blank\' data-test="te\'st" only-prop': '<a only-prop=\"only-prop\" data-test=\"te\'st\" target=\"_blank\" href=\"/?a=b\"></a>'
 
   for node_meta, expect_html of tests_data
     nd = new casua.Node node_meta
@@ -96,3 +96,15 @@ test 'Should can val()', ->
   equal node.attr('value'), 2, 'redirect by attr()'
   node.attr 'value', 3
   equal node.val(), 3, 'redirect by attr()'
+
+
+test 'Should can get and set boolean attribute by attr()', ->
+  node = new casua.Node 'input type="checkbox" checked'
+  equal node[0].outerHTML, '<input checked=\"checked\" type=\"checkbox\">', 'set'
+  equal node.attr('checked'), true, 'get'
+  node.attr 'checked', false
+  equal node[0].outerHTML, '<input type=\"checkbox\">', 'set'
+  equal node[0].checked, false, 'set'
+  node.attr 'checked', true
+  equal node[0].outerHTML, '<input checked=\"checked\" type=\"checkbox\">', 'set'
+  equal node.attr('checked'), true, 'get'

@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
+  var casua, k, v, __boolean_attr_regexp, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -44,6 +44,8 @@ Released under the MIT license
       return '&' + _reversed_escape_chars[m] + ';';
     });
   };
+
+  __boolean_attr_regexp = /^multiple|selected|checked|disabled|required|open$/;
 
   casua = {};
 
@@ -146,7 +148,7 @@ Released under the MIT license
           for (_i = 0, _len = attrs_data.length; _i < _len; _i++) {
             attr = attrs_data[_i];
             if (attr.charAt(0) !== '#' && (r = attr.match(/^([^=]+)(?:=(['"])(.+?)\2)?$/))) {
-              this.attr(r[1], r[3] || '');
+              this.attr(r[1], r[3] || r[1]);
             }
           }
         } else {
@@ -166,16 +168,34 @@ Released under the MIT license
 
     Node.prototype.attr = function(name, value) {
       name = name.toLowerCase();
-      if (name === 'value') {
+      if (name.match(/^val|value$/)) {
         return this.val(value);
       }
-      if (value != null) {
-        _forEach(this, function() {
-          return this.setAttribute(name, value);
-        });
-        return this;
+      if (name.match(__boolean_attr_regexp)) {
+        if (value != null) {
+          if (value) {
+            return _forEach(this, function() {
+              this.setAttribute(name, name);
+              return this[name] = true;
+            });
+          } else {
+            return _forEach(this, function() {
+              this.removeAttribute(name);
+              return this[name] = false;
+            });
+          }
+        } else {
+          return this[0][name];
+        }
       } else {
-        return this[0].getAttribute(name, 2);
+        if (value != null) {
+          _forEach(this, function() {
+            return this.setAttribute(name, value);
+          });
+          return this;
+        } else {
+          return this[0].getAttribute(name, 2);
+        }
       }
     };
 
@@ -681,31 +701,35 @@ Released under the MIT license
     };
     __keep_original_attr_regexp = /^class$/;
     __nodeAttrBind = function(_controller, _node, attr, _scope, src) {
-      var o, original;
-      original = attr.match(__keep_original_attr_regexp) && (o = _node.attr(attr)) ? o + ' ' : '';
-      return __computeBind(_controller, _scope, src, function(result) {
-        return _node.attr(attr, original + result);
+      var o, original, r, setter;
+      original = attr.match(__keep_original_attr_regexp) && (o = _node.attr(attr)) ? o + ' ' : void 0;
+      __computeBind(_controller, _scope, src, function(result) {
+        if (original != null) {
+          result = original + result;
+        }
+        return _node.attr(attr, result);
       });
+      if (attr.match(__boolean_attr_regexp) && (r = src.match(__compute_scope_key_regexp))) {
+        setter = function() {
+          return _scope.set(r[1], _node.attr(attr));
+        };
+        return _node.on('click', setter);
+      }
     };
-    __nodeValueBind = function(_controller, _root, _scope, src) {
+    __nodeValueBind = function(_controller, _node, _scope, src) {
       var getter, key, r, setter, _i, _len, _ref, _results;
       if (r = src.match(__compute_scope_key_regexp)) {
         getter = function() {
-          return _root.val(_scope.get(r[1]));
+          return _node.val(_scope.get(r[1]));
         };
         setter = function() {
-          return _scope.set(r[1], _root.val());
+          return _scope.set(r[1], _node.val());
         };
       } else {
         return __nodeBind(_controller, _root, 'val', _scope, child);
       }
-      switch (_root.attr('type')) {
-        case 'oop':
-          break;
-        default:
-          _root.on('change', setter);
-          _root.on('keyup', setter);
-      }
+      _node.on('change', setter);
+      _node.on('keyup', setter);
       _scope.$startGetWatches();
       getter.call(_scope);
       _ref = _scope.$stopGetWatches();

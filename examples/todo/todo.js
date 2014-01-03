@@ -17,9 +17,6 @@
 
   TaskCtrl = casua.defineController(function(scope) {
     return {
-      finishTask: function(e) {
-        return scope.set('done', e.target.checked);
-      },
       taskClass: function() {
         if (scope.get('done')) {
           return 'is-done';
@@ -38,7 +35,7 @@
         '@controller': TaskCtrl,
         'li': {
           'input type="checkbox"': {
-            '@on click': 'finishTask'
+            '@attr checked': '@done'
           },
           '@attr class': '@taskClass()',
           'span': {

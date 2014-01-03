@@ -17,6 +17,8 @@ _escapeHTML = (str) ->
   str.replace /[&<>"']/g, (m) ->
     '&' + _reversed_escape_chars[m] + ';'
 
+__boolean_attr_regexp = /^multiple|selected|checked|disabled|required|open$/
+
 casua = {}
 
 class casua.Node
@@ -86,7 +88,7 @@ class casua.Node
         _addNodes @, el
         for attr in attrs_data
           if attr.charAt(0) != '#' && r = attr.match /^([^=]+)(?:=(['"])(.+?)\2)?$/
-            @attr r[1], ( r[3] || '' )
+            @attr r[1], ( r[3] || r[1] )
       else
         div = document.createElement 'div'
         div.innerHTML = '<div>&#160;</div>' + node_meta
@@ -98,12 +100,25 @@ class casua.Node
 
   attr: (name, value) ->
     name = name.toLowerCase()
-    return @val(value) if name == 'value'
-    if value?
-      _forEach @, -> @setAttribute name, value
-      @
+    return @val(value) if name.match /^val|value$/
+    if name.match __boolean_attr_regexp
+      if value?
+        if value
+          _forEach @, -> 
+            @setAttribute name, name
+            @[name] = true
+        else
+          _forEach @, -> 
+            @removeAttribute name
+            @[name] = false
+      else
+        @[0][name]
     else
-      @[0].getAttribute name, 2
+      if value?
+        _forEach @, -> @setAttribute name, value
+        @
+      else
+        @[0].getAttribute name, 2
     
   append: (node) ->
     node = new casua.Node node if typeof node is 'string'
@@ -370,22 +385,22 @@ casua.defineController = (init_fn) ->
   __nodeAttrBind = (_controller, _node, attr, _scope, src) ->
     original = if attr.match(__keep_original_attr_regexp) && o = _node.attr(attr)
       o + ' '
-    else
-      ''
     __computeBind _controller, _scope, src, (result) ->
-      _node.attr attr, original + result
+      result = original + result if original?
+      _node.attr attr, result
+    if attr.match(__boolean_attr_regexp) && r = src.match(__compute_scope_key_regexp)
+      setter = ->
+        _scope.set r[1], _node.attr(attr)
+      _node.on 'click', setter
 
-  __nodeValueBind = (_controller, _root, _scope, src) ->
+  __nodeValueBind = (_controller, _node, _scope, src) ->
     if r = src.match __compute_scope_key_regexp
-      getter = -> _root.val _scope.get(r[1])
-      setter = -> _scope.set r[1], _root.val()
+      getter = -> _node.val _scope.get(r[1])
+      setter = -> _scope.set r[1], _node.val()
     else
       return __nodeBind _controller, _root, 'val', _scope, child
-    switch _root.attr('type')
-      when 'oop'
-      else
-        _root.on 'change', setter
-        _root.on 'keyup', setter
+    _node.on 'change', setter
+    _node.on 'keyup', setter
     _scope.$startGetWatches()
     getter.call _scope
     _scope.$watch key, getter for key in _scope.$stopGetWatches()
