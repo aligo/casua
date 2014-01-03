@@ -573,7 +573,7 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(init_fn) {
-    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
+    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __keep_original_attr_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
       var child, m, new_controller, new_template, node, node_meta, r, _results;
       if (_scope instanceof casua.ArrayScope) {
@@ -603,6 +603,9 @@ Released under the MIT license
                   break;
                 case 'attr':
                   _results.push(__nodeAttrBind(_controller, _root, r[2], _scope, child));
+                  break;
+                case 'class':
+                  _results.push(__nodeAttrBind(_controller, _root, r[1], _scope, child));
                   break;
                 case 'child':
                   _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
@@ -681,9 +684,12 @@ Released under the MIT license
         return _node[_method].call(_node, result);
       });
     };
+    __keep_original_attr_regexp = /^class$/;
     __nodeAttrBind = function(_controller, _node, attr, _scope, src) {
+      var o, original;
+      original = attr.match(__keep_original_attr_regexp) && (o = _node.attr(attr)) ? o + ' ' : '';
       return __computeBind(_controller, _scope, src, function(result) {
-        return _node.attr(attr, result);
+        return _node.attr(attr, original + result);
       });
     };
     __nodeCondition = function(_controller, _node, _method, _scope, src) {

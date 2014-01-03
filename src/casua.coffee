@@ -327,6 +327,8 @@ casua.defineController = (init_fn) ->
                 __nodeBind _controller, _root, r[1], _scope, child
               when 'attr'
                 __nodeAttrBind _controller, _root, r[2], _scope, child
+              when 'class'
+                __nodeAttrBind _controller, _root, r[1], _scope, child
               when 'child'
                 _renderNode _controller, _scope.get(r[2]), _root, child
               when 'if'
@@ -362,9 +364,14 @@ casua.defineController = (init_fn) ->
     __computeBind _controller, _scope, src, (result) ->
       _node[_method].call _node, result
 
+  __keep_original_attr_regexp = /^class$/
   __nodeAttrBind = (_controller, _node, attr, _scope, src) ->
+    original = if attr.match(__keep_original_attr_regexp) && o = _node.attr(attr)
+      o + ' '
+    else
+      ''
     __computeBind _controller, _scope, src, (result) ->
-      _node.attr attr, result
+      _node.attr attr, original + result
 
   __nodeCondition = (_controller, _node, _method, _scope, src) ->
     cur_node = true_node = _node
