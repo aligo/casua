@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, __boolean_attr_regexp, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
+  var casua, k, v, __boolean_attr_regexp, __mutiple_levels_key_regexp, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -376,6 +376,8 @@ Released under the MIT license
     }
   };
 
+  __mutiple_levels_key_regexp = /^([^\.]+)\.(.+)$/;
+
   casua.Scope = (function() {
     function Scope(init_data, parent) {
       var key, value;
@@ -395,43 +397,60 @@ Released under the MIT license
     }
 
     Scope.prototype.get = function(key) {
-      var ret;
-      if (this._watch_lists && this._watch_lists.indexOf(key) === -1) {
-        this._watch_lists.push(key);
+      var r, ret;
+      if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
+        return this.get(r[1]).get(r[2]);
+      } else {
+        if (this._watch_lists && this._watch_lists.indexOf(key) === -1) {
+          this._watch_lists.push(key);
+        }
+        ret = this._data[key];
+        if ((ret == null) && (this._parent != null)) {
+          ret = this._parent.get(key);
+        }
+        return ret;
       }
-      ret = this._data[key];
-      if ((ret == null) && (this._parent != null)) {
-        ret = this._parent.get(key);
-      }
-      return ret;
     };
 
     Scope.prototype.set = function(key, value) {
-      var old;
-      if (!(typeof key === 'string' && key.charAt(0) === '$')) {
-        if (typeof value === 'object') {
-          value = new casua.Scope(value, this);
-        }
-        if (this._data[key] !== value) {
-          old = this._data[key];
-          this._data[key] = value;
-          if (old == null) {
-            _scopeCallWatch(this, value, key, '$add');
+      var old, r;
+      if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
+        return this.get(r[1]).set(r[2], value);
+      } else {
+        if (!(typeof key === 'string' && key.charAt(0) === '$')) {
+          if (typeof value === 'object') {
+            value = new casua.Scope(value, this);
           }
-          return _scopeCallWatch(this, value, old, key);
+          if (this._data[key] !== value) {
+            old = this._data[key];
+            this._data[key] = value;
+            if (old == null) {
+              _scopeCallWatch(this, value, key, '$add');
+            }
+            return _scopeCallWatch(this, value, old, key);
+          }
         }
       }
     };
 
     Scope.prototype.remove = function(key) {
-      _scopeRemovePrepare(this, key);
-      return delete this._data[key];
+      var r;
+      if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
+        return this.get(r[1]).remove(r[2]);
+      } else {
+        _scopeRemovePrepare(this, key);
+        return delete this._data[key];
+      }
     };
 
     Scope.prototype.$watch = function(key, fn) {
-      var _base;
-      (_base = this._watches)[key] || (_base[key] = []);
-      return this._watches[key].push(fn);
+      var r, _base;
+      if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
+        return this.get(r[1]).$watch(r[2], fn);
+      } else {
+        (_base = this._watches)[key] || (_base[key] = []);
+        return this._watches[key].push(fn);
+      }
     };
 
     Scope.prototype.$startGetWatches = function() {

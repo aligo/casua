@@ -209,6 +209,8 @@ _scopeCallAltWatch = (_scope, new_val, key, type) ->
   if _scope._watches[type]
     fn.call _scope, new_val, type, key for fn in _scope._watches[type]
 
+__mutiple_levels_key_regexp = /^([^\.]+)\.(.+)$/
+
 class casua.Scope
 
   constructor: (init_data, parent) ->
@@ -223,29 +225,41 @@ class casua.Scope
       @set key, value for key, value of init_data
 
   get: (key) ->
-    @_watch_lists.push key if @_watch_lists && @_watch_lists.indexOf(key) == -1
-    ret = @_data[key]
-    ret = @_parent.get(key) if !ret? && @_parent?
-    ret
+    if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
+      @get(r[1]).get(r[2])
+    else
+      @_watch_lists.push key if @_watch_lists && @_watch_lists.indexOf(key) == -1
+      ret = @_data[key]
+      ret = @_parent.get(key) if !ret? && @_parent?
+      ret
 
   set: (key, value) ->
-    unless typeof key is 'string' && key.charAt(0) == '$'
-      if typeof value is 'object'
-        value = new casua.Scope value, @
-      if @_data[key] != value
-        old = @_data[key]
-        @_data[key] = value
-        unless old?
-          _scopeCallWatch @, value, key, '$add'
-        _scopeCallWatch @, value, old, key
+    if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
+      @get(r[1]).set r[2], value
+    else
+      unless typeof key is 'string' && key.charAt(0) == '$'
+        if typeof value is 'object'
+          value = new casua.Scope value, @
+        if @_data[key] != value
+          old = @_data[key]
+          @_data[key] = value
+          unless old?
+            _scopeCallWatch @, value, key, '$add'
+          _scopeCallWatch @, value, old, key
 
   remove: (key) ->
-    _scopeRemovePrepare @, key
-    delete @_data[key]
+    if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
+      @get(r[1]).remove(r[2])
+    else
+      _scopeRemovePrepare @, key
+      delete @_data[key]
 
   $watch: (key, fn) ->
-    @_watches[key] ||= []
-    @_watches[key].push fn
+    if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
+      @get(r[1]).$watch r[2], fn
+    else
+      @_watches[key] ||= []
+      @_watches[key].push fn
 
   $startGetWatches: ->
     @_watch_lists = []

@@ -15,6 +15,8 @@ test 'Should can handle mutitple-levels scope', ->
     level2:
       test: 2
       two: 2
+      level3:
+        test: 3
     to_remove:
       test: 3
   equal ( scope._childs.indexOf(scope.get('level2')) == -1 ), false, 'parent._childs be seted up'
@@ -31,6 +33,13 @@ test 'Should can handle mutitple-levels scope', ->
   equal scope._childs.length, 2, 'scope has two childs'
   scope.remove('to_remove')
   equal scope._childs.length, 1, 'to_remove has been remove & release'
+
+  equal scope.get('level2.level3.test'), 3, 'get mutitple-levels scope with dots format'
+  watched = []
+  scope.$watch 'level2.level3.test', (n, o, k) -> watched = [n, o, k]
+  scope.set 'level2.level3.test', 'new'
+  equal scope.get('level2').get('level3').get('test'), 'new', 'set mutitple-levels scope with dots format'
+  deepEqual watched, ['new', 3, 'test'], 'watch mutitple-levels scope with dots format'
 
 test 'Should can be created to ArrayScope', ->
   scope = new casua.Scope [1, 2, 3]
@@ -147,3 +156,4 @@ test 'Should can get watch lists', ->
   deepEqual scope.$stopGetWatches(), ['test', 'test2'], 'get emtpy watch lists'
   equal scope.get('test3'), 3, 'normal get()'
   deepEqual watch_lists, ['test', 'test2'], 'get emtpy watch lists'
+
