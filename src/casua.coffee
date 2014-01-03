@@ -316,10 +316,11 @@ casua.defineController = (init_fn) ->
     else
       for node_meta, child of template
         if node_meta.charAt(0) == '@'
-          if r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)
+          if r = node_meta.toLowerCase().match /^@(\w+)(?: (\S+))?$/
             switch r[1]
               when 'on'
-                _root.on r[2], _controller.methods[child]
+                m = child.match /^@?(\S+)(?:\(\))?$/
+                _root.on r[2], _controller.methods[m[1]]
               when 'html', 'text'
                 __nodeBind _controller, _root, r[1], _scope, child
               when 'val'

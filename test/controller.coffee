@@ -47,8 +47,8 @@ test 'CST @on', ->
 
   fragment2 = testCtrlInst.render
     'a':
-      '@on click': 'clickOne'
-      '@on click': 'clickTwo'
+      '@on click': 'clickOne()'
+      '@on click': '@clickTwo'
   _test._trigger fragment2[0].children[0], 'click'
   equal clicked, 6, '@on click: clickTwo'
 

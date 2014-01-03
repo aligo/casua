@@ -575,7 +575,7 @@ Released under the MIT license
   casua.defineController = function(init_fn) {
     var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
-      var child, new_controller, new_template, node, node_meta, r, _results;
+      var child, m, new_controller, new_template, node, node_meta, r, _results;
       if (_scope instanceof casua.ArrayScope) {
         return _renderNodes(_controller, _scope, _root, template);
       } else if (template['@controller']) {
@@ -591,7 +591,8 @@ Released under the MIT license
             if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
               switch (r[1]) {
                 case 'on':
-                  _results.push(_root.on(r[2], _controller.methods[child]));
+                  m = child.match(/^@?(\S+)(?:\(\))?$/);
+                  _results.push(_root.on(r[2], _controller.methods[m[1]]));
                   break;
                 case 'html':
                 case 'text':
