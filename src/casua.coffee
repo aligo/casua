@@ -314,6 +314,7 @@ casua.defineController = (init_fn) ->
       delete new_template['@controller']
       _renderNode new_controller, _scope, _root, new_template
     else
+      ret_nodes = []
       for node_meta, child of template
         if node_meta.charAt(0) == '@'
           if r = node_meta.toLowerCase().match /^@(\w+)(?: (\S+))?$/
@@ -324,7 +325,7 @@ casua.defineController = (init_fn) ->
               when 'html', 'text'
                 __nodeBind _controller, _root, r[1], _scope, child
               when 'val'
-                __nodeBind _controller, _root, r[1], _scope, child
+                __nodeValueBind _controller, _root, _scope, child
               when 'attr'
                 __nodeAttrBind _controller, _root, r[2], _scope, child
               when 'class'
@@ -335,12 +336,13 @@ casua.defineController = (init_fn) ->
                 __nodeCondition _controller, _root, r[1], _scope, child
         else
           node = new casua.Node node_meta
+          ret_nodes.push node
           _root.append node
           if typeof child is 'object'
             _renderNode _controller, _scope, node, child
           else
             __nodeBind _controller, node, 'text', _scope, child
-          node
+      ret_nodes    
 
   _renderNodes = (_controller, _scope, _root, template) ->
     _root.empty()
@@ -372,6 +374,21 @@ casua.defineController = (init_fn) ->
       ''
     __computeBind _controller, _scope, src, (result) ->
       _node.attr attr, original + result
+
+  __nodeValueBind = (_controller, _root, _scope, src) ->
+    if r = src.match __compute_scope_key_regexp
+      getter = -> _root.val _scope.get(r[1])
+      setter = -> _scope.set r[1], _root.val()
+    else
+      return __nodeBind _controller, _root, 'val', _scope, child
+    switch _root.attr('type')
+      when 'oop'
+      else
+        _root.on 'change', setter
+        _root.on 'keyup', setter
+    _scope.$startGetWatches()
+    getter.call _scope
+    _scope.$watch key, getter for key in _scope.$stopGetWatches()
 
   __nodeCondition = (_controller, _node, _method, _scope, src) ->
     cur_node = true_node = _node
@@ -417,9 +434,8 @@ casua.defineController = (init_fn) ->
     else
       -> fn.call {}, src
     _scope.$startGetWatches()
-    ret = watch_fn.call _scope
+    watch_fn.call _scope
     _scope.$watch key, watch_fn for key in _scope.$stopGetWatches()
-    ret
 
   class
     constructor: (init_data) ->

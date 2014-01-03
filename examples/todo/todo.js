@@ -5,9 +5,6 @@
   TasksCtrl = casua.defineController(function(scope) {
     scope.set('new_task_name', 'new');
     return {
-      updateNewTaskName: function(e) {
-        return scope.set('new_task_name', e.target.value);
-      },
       addNewTask: function() {
         scope.get('tasks').push({
           'name': scope.get('new_task_name')
@@ -51,8 +48,7 @@
       }
     },
     'input type="text"': {
-      '@val': '@new_task_name',
-      '@on keyup': 'updateNewTaskName'
+      '@val': '@new_task_name'
     },
     'br': '',
     'a href="#"': {

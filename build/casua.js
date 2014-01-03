@@ -573,9 +573,9 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(init_fn) {
-    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __keep_original_attr_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, _renderNode, _renderNodes;
+    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __keep_original_attr_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, __nodeValueBind, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
-      var child, m, new_controller, new_template, node, node_meta, r, _results;
+      var child, m, new_controller, new_template, node, node_meta, r, ret_nodes;
       if (_scope instanceof casua.ArrayScope) {
         return _renderNodes(_controller, _scope, _root, template);
       } else if (template['@controller']) {
@@ -584,7 +584,7 @@ Released under the MIT license
         delete new_template['@controller'];
         return _renderNode(new_controller, _scope, _root, new_template);
       } else {
-        _results = [];
+        ret_nodes = [];
         for (node_meta in template) {
           child = template[node_meta];
           if (node_meta.charAt(0) === '@') {
@@ -592,45 +592,40 @@ Released under the MIT license
               switch (r[1]) {
                 case 'on':
                   m = child.match(/^@?(\S+)(?:\(\))?$/);
-                  _results.push(_root.on(r[2], _controller.methods[m[1]]));
+                  _root.on(r[2], _controller.methods[m[1]]);
                   break;
                 case 'html':
                 case 'text':
-                  _results.push(__nodeBind(_controller, _root, r[1], _scope, child));
+                  __nodeBind(_controller, _root, r[1], _scope, child);
                   break;
                 case 'val':
-                  _results.push(__nodeBind(_controller, _root, r[1], _scope, child));
+                  __nodeValueBind(_controller, _root, _scope, child);
                   break;
                 case 'attr':
-                  _results.push(__nodeAttrBind(_controller, _root, r[2], _scope, child));
+                  __nodeAttrBind(_controller, _root, r[2], _scope, child);
                   break;
                 case 'class':
-                  _results.push(__nodeAttrBind(_controller, _root, r[1], _scope, child));
+                  __nodeAttrBind(_controller, _root, r[1], _scope, child);
                   break;
                 case 'child':
-                  _results.push(_renderNode(_controller, _scope.get(r[2]), _root, child));
+                  _renderNode(_controller, _scope.get(r[2]), _root, child);
                   break;
                 case 'if':
-                  _results.push(__nodeCondition(_controller, _root, r[1], _scope, child));
-                  break;
-                default:
-                  _results.push(void 0);
+                  __nodeCondition(_controller, _root, r[1], _scope, child);
               }
-            } else {
-              _results.push(void 0);
             }
           } else {
             node = new casua.Node(node_meta);
+            ret_nodes.push(node);
             _root.append(node);
             if (typeof child === 'object') {
               _renderNode(_controller, _scope, node, child);
             } else {
               __nodeBind(_controller, node, 'text', _scope, child);
             }
-            _results.push(node);
           }
         }
-        return _results;
+        return ret_nodes;
       }
     };
     _renderNodes = function(_controller, _scope, _root, template) {
@@ -692,6 +687,35 @@ Released under the MIT license
         return _node.attr(attr, original + result);
       });
     };
+    __nodeValueBind = function(_controller, _root, _scope, src) {
+      var getter, key, r, setter, _i, _len, _ref, _results;
+      if (r = src.match(__compute_scope_key_regexp)) {
+        getter = function() {
+          return _root.val(_scope.get(r[1]));
+        };
+        setter = function() {
+          return _scope.set(r[1], _root.val());
+        };
+      } else {
+        return __nodeBind(_controller, _root, 'val', _scope, child);
+      }
+      switch (_root.attr('type')) {
+        case 'oop':
+          break;
+        default:
+          _root.on('change', setter);
+          _root.on('keyup', setter);
+      }
+      _scope.$startGetWatches();
+      getter.call(_scope);
+      _ref = _scope.$stopGetWatches();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        key = _ref[_i];
+        _results.push(_scope.$watch(key, getter));
+      }
+      return _results;
+    };
     __nodeCondition = function(_controller, _node, _method, _scope, src) {
       var cur_node, false_node, true_node;
       cur_node = true_node = _node;
@@ -713,7 +737,7 @@ Released under the MIT license
     __compute_controller_regexp = /@(\S+)\(\)/g;
     __compute_controller_method_regexp = /^@(\S+)\(\)$/;
     __computeBind = function(_controller, _scope, src, fn, to_eval) {
-      var key, keys_to_watch, r, ret, watch_fn, _i, _len, _ref;
+      var key, keys_to_watch, r, watch_fn, _i, _len, _ref, _results;
       if (to_eval == null) {
         to_eval = false;
       }
@@ -741,13 +765,14 @@ Released under the MIT license
         return fn.call({}, src);
       };
       _scope.$startGetWatches();
-      ret = watch_fn.call(_scope);
+      watch_fn.call(_scope);
       _ref = _scope.$stopGetWatches();
+      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         key = _ref[_i];
-        _scope.$watch(key, watch_fn);
+        _results.push(_scope.$watch(key, watch_fn));
       }
-      return ret;
+      return _results;
     };
     return (function() {
       function _Class(init_data) {

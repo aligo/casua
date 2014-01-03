@@ -44,11 +44,12 @@ test 'CST @attr', ->
   testCtrlInst = new testController
     test: 'value1'
     alt_class: 'alt'
+  scope = testCtrlInst.scope
   fragment1 = testCtrlInst.render
     'div':
       '@attr data-attr': '@test'
   equal fragment1[0].children[0].outerHTML, '<div data-attr=\"value1\"></div>', 'bind @attr'
-  testCtrlInst.scope.set 'test', 'new'
+  scope.set 'test', 'new'
   equal fragment1[0].children[0].outerHTML, '<div data-attr=\"new\"></div>', 'bind @attr'
 
   fragment2 = testCtrlInst.render
@@ -56,8 +57,24 @@ test 'CST @attr', ->
       '@attr class': 'another {{alt_class}}'
   equal fragment2[0].children[0].outerHTML, '<div class=\"original another alt\"></div>', 'bind @attr class'
 
-  testCtrlInst.scope.set 'alt_class', 1
+  scope.set 'alt_class', 1
   fragment3 = testCtrlInst.render
     'div.original':
       '@class': 'another-{{alt_class}}'
   equal fragment3[0].children[0].outerHTML, '<div class=\"original another-1\"></div>', 'bind @class for short'
+
+test 'CST @val', ->
+  testController = casua.defineController ->
+  testCtrlInst = new testController
+    test: 'value1'
+  scope = testCtrlInst.scope
+  fragment1 = testCtrlInst.render
+    'input':
+      '@val': '@test'
+  equal fragment1[0].children[0].value, 'value1', 'bind @val'
+  scope.set 'test', 'new'
+  equal fragment1[0].children[0].value, 'new', 'bind @val getter'
+
+  fragment1[0].children[0].value = 'set new'
+  _test._trigger fragment1[0].children[0], 'keyup'
+  equal scope.get('test'), 'set new', 'bind @val setter'

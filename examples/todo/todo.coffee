@@ -1,7 +1,5 @@
 TasksCtrl = casua.defineController (scope) ->
   scope.set 'new_task_name', 'new'
-  updateNewTaskName: (e) ->
-    scope.set 'new_task_name', e.target.value
   addNewTask: ->
     scope.get('tasks').push
       'name': scope.get('new_task_name')
@@ -31,7 +29,6 @@ template =
           '@html': 'Task {{name}}'
   'input type="text"':
     '@val': '@new_task_name'
-    '@on keyup': 'updateNewTaskName'
   'br': ''
   'a href="#"':
     '@on click': 'addNewTask'
