@@ -98,19 +98,12 @@ class casua.Node
 
   attr: (name, value) ->
     name = name.toLowerCase()
-    return @value(value) if name == 'value'
+    return @val(value) if name == 'value'
     if value?
       _forEach @, -> @setAttribute name, value
       @
     else
       @[0].getAttribute name, 2
-
-  value: (new_value) ->
-    if new_value?
-      _forEach @, -> @value = new_value
-      @
-    else
-      @[0].value
     
   append: (node) ->
     node = new casua.Node node if typeof node is 'string'
@@ -165,6 +158,13 @@ class casua.Node
     node = new casua.Node node if typeof node is 'string'
     _forEach @, (i, from) -> _forEach node, (j, to) -> from.parentNode.replaceChild to, from if from.parentNode
     @
+
+  val: (value) ->
+    if value?
+      _forEach @, -> @value = value
+      @
+    else
+      @[0].value
 
 _scopeInitParent = (_scope, _parent) ->
   _scope._childs = []
@@ -320,7 +320,9 @@ casua.defineController = (init_fn) ->
             switch r[1]
               when 'on'
                 _root.on r[2], _controller.methods[child]
-              when 'html', 'text', 'value'
+              when 'html', 'text'
+                __nodeBind _controller, _root, r[1], _scope, child
+              when 'val'
                 __nodeBind _controller, _root, r[1], _scope, child
               when 'attr'
                 __nodeAttrBind _controller, _root, r[2], _scope, child

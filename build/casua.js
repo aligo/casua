@@ -167,7 +167,7 @@ Released under the MIT license
     Node.prototype.attr = function(name, value) {
       name = name.toLowerCase();
       if (name === 'value') {
-        return this.value(value);
+        return this.val(value);
       }
       if (value != null) {
         _forEach(this, function() {
@@ -176,17 +176,6 @@ Released under the MIT license
         return this;
       } else {
         return this[0].getAttribute(name, 2);
-      }
-    };
-
-    Node.prototype.value = function(new_value) {
-      if (new_value != null) {
-        _forEach(this, function() {
-          return this.value = new_value;
-        });
-        return this;
-      } else {
-        return this[0].value;
       }
     };
 
@@ -289,6 +278,17 @@ Released under the MIT license
         });
       });
       return this;
+    };
+
+    Node.prototype.val = function(value) {
+      if (value != null) {
+        _forEach(this, function() {
+          return this.value = value;
+        });
+        return this;
+      } else {
+        return this[0].value;
+      }
     };
 
     return Node;
@@ -595,7 +595,9 @@ Released under the MIT license
                   break;
                 case 'html':
                 case 'text':
-                case 'value':
+                  _results.push(__nodeBind(_controller, _root, r[1], _scope, child));
+                  break;
+                case 'val':
                   _results.push(__nodeBind(_controller, _root, r[1], _scope, child));
                   break;
                 case 'attr':

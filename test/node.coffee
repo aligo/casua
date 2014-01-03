@@ -85,3 +85,14 @@ test 'Should can remove()', ->
   equal node[0] == el, true, 'element still exists'
   container.append node
   equal container.html(), '<h1>test</h1>', 're-append'
+
+
+test 'Should can val()', ->
+  node = new casua.Node 'input'
+  node[0].value = 1
+  equal node.val(), 1, 'get value'
+  node.val 2
+  equal node[0].value, 2, 'set value'
+  equal node.attr('value'), 2, 'redirect by attr()'
+  node.attr 'value', 3
+  equal node.val(), 3, 'redirect by attr()'

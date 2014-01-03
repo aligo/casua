@@ -30,7 +30,7 @@ template =
         'span':
           '@html': 'Task {{name}}'
   'input type="text"':
-    '@value': '@new_task_name'
+    '@val': '@new_task_name'
     '@on keyup': 'updateNewTaskName'
   'br': ''
   'a href="#"':

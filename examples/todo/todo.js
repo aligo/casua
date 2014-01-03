@@ -51,7 +51,7 @@
       }
     },
     'input type="text"': {
-      '@value': '@new_task_name',
+      '@val': '@new_task_name',
       '@on keyup': 'updateNewTaskName'
     },
     'br': '',
