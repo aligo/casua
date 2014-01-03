@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, __boolean_attr_regexp, __mutiple_levels_key_regexp, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
+  var casua, k, v, __boolean_attr_regexp, __mutiple_levels_key_regexp, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeChangeLength, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -398,12 +398,12 @@ Released under the MIT license
 
     Scope.prototype.get = function(key) {
       var r, ret;
+      if (this._watch_lists && this._watch_lists.indexOf(key) === -1) {
+        this._watch_lists.push(key);
+      }
       if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
         return this.get(r[1]).get(r[2]);
       } else {
-        if (this._watch_lists && this._watch_lists.indexOf(key) === -1) {
-          this._watch_lists.push(key);
-        }
         ret = this._data[key];
         if ((ret == null) && (this._parent != null)) {
           ret = this._parent.get(key);
@@ -477,6 +477,14 @@ Released under the MIT license
 
   })();
 
+  _scopeChangeLength = function(_scope, fn) {
+    var ret, _old_length;
+    _old_length = _scope._data.length;
+    ret = fn.call(_scope);
+    _scopeCallWatch(_scope, _scope._data.length, _old_length, 'length');
+    return ret;
+  };
+
   casua.ArrayScope = (function(_super) {
     __extends(ArrayScope, _super);
 
@@ -502,8 +510,10 @@ Released under the MIT license
     };
 
     ArrayScope.prototype.remove = function(key) {
-      _scopeRemovePrepare(this, key);
-      return this._data.splice(key, 1);
+      return _scopeChangeLength(this, function() {
+        _scopeRemovePrepare(this, key);
+        return this._data.splice(key, 1);
+      });
     };
 
     ArrayScope.prototype.each = function(fn) {
@@ -526,12 +536,16 @@ Released under the MIT license
     };
 
     ArrayScope.prototype.push = function() {
-      var one, _i, _len;
-      for (_i = 0, _len = arguments.length; _i < _len; _i++) {
-        one = arguments[_i];
-        this.set(this._data.length, one);
-      }
-      return this._data.length;
+      var args;
+      args = arguments;
+      return _scopeChangeLength(this, function() {
+        var one, _i, _len;
+        for (_i = 0, _len = args.length; _i < _len; _i++) {
+          one = args[_i];
+          this.set(this._data.length, one);
+        }
+        return this._data.length;
+      });
     };
 
     ArrayScope.prototype.unshift = function() {
@@ -553,6 +567,7 @@ Released under the MIT license
         return _results;
       }).apply(this, arguments);
       _scopeCallWatch(this, pos, null, '$move');
+      _scopeCallWatch(this, this._data.length, _old_length, 'length');
       return this._data.length;
     };
 

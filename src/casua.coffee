@@ -225,10 +225,10 @@ class casua.Scope
       @set key, value for key, value of init_data
 
   get: (key) ->
+    @_watch_lists.push key if @_watch_lists && @_watch_lists.indexOf(key) == -1
     if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
       @get(r[1]).get(r[2])
     else
-      @_watch_lists.push key if @_watch_lists && @_watch_lists.indexOf(key) == -1
       ret = @_data[key]
       ret = @_parent.get(key) if !ret? && @_parent?
       ret
@@ -270,6 +270,12 @@ class casua.Scope
     delete @_watch_lists
     lists
 
+_scopeChangeLength = (_scope, fn) ->
+  _old_length = _scope._data.length
+  ret = fn.call _scope
+  _scopeCallWatch _scope, _scope._data.length, _old_length, 'length'
+  ret
+
 class casua.ArrayScope extends casua.Scope
 
   constructor: (init_data, parent) ->
@@ -286,8 +292,9 @@ class casua.ArrayScope extends casua.Scope
   length: -> @_data.length
 
   remove: (key) ->
-    _scopeRemovePrepare @, key
-    @_data.splice key, 1
+    _scopeChangeLength @, ->
+      _scopeRemovePrepare @, key
+      @_data.splice key, 1
 
   each: (fn) ->
     for one, i in @_data
@@ -297,9 +304,11 @@ class casua.ArrayScope extends casua.Scope
 
   shift: -> @remove(0)[0]
 
-  push: -> 
-    @set @_data.length, one for one in arguments
-    @_data.length
+  push: ->
+    args = arguments
+    _scopeChangeLength @, ->
+      @set @_data.length, one for one in args
+      @_data.length
 
   unshift: ->
     _old_length = @_data.length
@@ -310,6 +319,7 @@ class casua.ArrayScope extends casua.Scope
       else
         i - _old_length
     _scopeCallWatch @, pos, null, '$move'
+    _scopeCallWatch @, @_data.length, _old_length, 'length'
     @_data.length
 
   reverse: ->

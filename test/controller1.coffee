@@ -109,9 +109,14 @@ test 'CST @controller', ->
       '@child lists':
         '@controller': childController
         'li': '{{name}}'
+    'span': '{{lists.length}} lists'
   lists.push { no: 1 }
   lists.push { no: 2 }
   equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li>', '2 childs'
+  equal fragment1[0].children[1].innerHTML, '2 lists', '2 childs'
+  lists.push { no: 3 }
+  equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li><li>task3</li>', '3 childs'
+  equal fragment1[0].children[1].innerHTML, '3 lists', '3 childs'
 
 test 'CST @if', ->
   testController = casua.defineController (scope) ->

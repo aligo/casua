@@ -44,6 +44,7 @@
         }
       }
     },
+    'p': 'Count: {{tasks.length}}',
     'input type="text"': {
       '@val': '@new_task_name'
     },
