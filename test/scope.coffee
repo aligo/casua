@@ -70,6 +70,8 @@ test 'Should can be created to ArrayScope', ->
 
   deepEqual arr, scope._data, 'array each()'
 
+  equal arr.indexOf(4), 1, 'scope indexOf()'
+
 test 'Should can watch', ->
   changed = []
   watch_fn = (n, o, k) -> changed.push [n, o, k]
@@ -148,6 +150,17 @@ test 'Should can watch ArrayScope 2', ->
 
   arr.sort (a, b) -> a - b
   deepEqual changed.shift(), [ [0, 4, 1, 2, 3, 5], '$move', null], 'watch sort() -> $move'
+
+test 'Should can watch ArrayScope 3', ->
+  changed = []
+  watch_fn = (n, o, k) -> changed.push [n, o, k]
+  arr = new casua.Scope [5, 3, 2, 1, 4, 0]
+  arr.$watch '$delete', watch_fn
+  arr.filter (e) -> e % 2 == 0
+  deepEqual arr._data, [2, 4, 0], 'filter()'
+  deepEqual changed.pop(), [5, '$delete', 0], 'watch filter() -> $delete'
+  deepEqual changed.pop(), [3, '$delete', 1], 'watch filter() -> $delete'
+  deepEqual changed.pop(), [1, '$delete', 3], 'watch filter() -> $delete'
   
 test 'Should can get watch lists', ->
   scope = new casua.Scope

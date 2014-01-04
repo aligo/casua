@@ -511,6 +511,10 @@ Released under the MIT license
       return this._data.length;
     };
 
+    ArrayScope.prototype.indexOf = function(child) {
+      return this._data.indexOf(child);
+    };
+
     ArrayScope.prototype.remove = function(key) {
       return _scopeChangeLength(this, function() {
         _scopeRemovePrepare(this, key);
@@ -624,6 +628,25 @@ Released under the MIT license
       return this;
     };
 
+    ArrayScope.prototype.filter = function(fn) {
+      var i, one, to_remove, _i, _j, _len, _len1, _ref, _ref1, _results;
+      to_remove = [];
+      _ref = this._data;
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        one = _ref[i];
+        if (!fn.call(this, one)) {
+          to_remove.push(i);
+        }
+      }
+      _ref1 = to_remove.reverse();
+      _results = [];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        i = _ref1[_j];
+        _results.push(this.remove(i));
+      }
+      return _results;
+    };
+
     return ArrayScope;
 
   })(casua.Scope);
@@ -647,7 +670,7 @@ Released under the MIT license
             if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
               switch (r[1]) {
                 case 'on':
-                  m = child.match(/^@?(\S+)(?:\(\))?$/);
+                  m = child.match(/^(\S+?)(?:\(\))?$/);
                   _root.on(r[2], __resolveMethod(_controller, m[1]));
                   break;
                 case 'html':
@@ -794,8 +817,8 @@ Released under the MIT license
     __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/;
     __compute_scope_regexp = /@(\S+)/g;
     __compute_scope_key_regexp = /^@(\S+)$/;
-    __compute_controller_regexp = /@(\S+)\(\)/g;
-    __compute_controller_method_regexp = /^@(\S+)\(\)$/;
+    __compute_controller_regexp = /(\S+)\(\)/g;
+    __compute_controller_method_regexp = /^(\S+)\(\)$/;
     __computeBind = function(_controller, _scope, src, fn, to_eval) {
       var key, keys_to_watch, method, r, watch_fn, _i, _len, _ref, _results;
       if (to_eval == null) {

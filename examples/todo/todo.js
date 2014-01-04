@@ -11,11 +11,19 @@
         });
         scope.set('new_task_name', '');
         return false;
+      },
+      removeSelectedTasks: function() {
+        scope.get('tasks').filter(function(task) {
+          return !task.get('done');
+        });
+        return false;
       }
     };
   });
 
   TaskCtrl = casua.defineController(function(scope) {
+    var tasks_scope;
+    tasks_scope = scope.get('$parent');
     return {
       taskClass: function() {
         if (scope.get('done')) {
@@ -23,6 +31,10 @@
         } else {
           return '';
         }
+      },
+      removeTask: function() {
+        tasks_scope.remove(tasks_scope.indexOf(scope));
+        return false;
       }
     };
   });
@@ -37,21 +49,32 @@
           'input type="checkbox"': {
             '@attr checked': '@done'
           },
-          '@attr class': '@taskClass()',
+          '@attr class': 'taskClass()',
           'span': {
             '@html': 'Task {{name}}'
+          },
+          'a href="#"': {
+            '@text': 'x',
+            '@on click': 'removeTask()'
           }
         }
       }
     },
-    'p': 'Count: {{tasks.length}}',
+    '.d0': 'Count: {{tasks.length}}',
     'input type="text"': {
       '@val': '@new_task_name'
     },
-    'br': '',
-    'a href="#"': {
-      '@on click': 'addNewTask',
-      '@text': 'Add Task {{new_task_name}}'
+    '.d1': {
+      'a href="#"': {
+        '@on click': 'addNewTask',
+        '@text': 'Add Task {{new_task_name}}'
+      }
+    },
+    '.d2': {
+      'a href="#"': {
+        '@on click': 'removeSelectedTasks()',
+        '@text': 'Remove Selected Tasks'
+      }
     }
   };
 

@@ -26,7 +26,7 @@ test 'CST @html', ->
 
   fragment4 = testCtrlInst.render
     'h1':
-      '@html': '@computeMethod()'
+      '@html': 'computeMethod()'
   equal fragment4[0].children[0].innerHTML, 'scope value computed', 'compute method binding'
 
   scope = testCtrlInst.scope

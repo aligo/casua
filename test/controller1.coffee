@@ -48,7 +48,7 @@ test 'CST @on', ->
   fragment2 = testCtrlInst.render
     'a':
       '@on click': 'clickOne()'
-      '@on click': '@clickTwo'
+      '@on click': 'clickTwo'
   _test._trigger fragment2[0].children[0], 'click'
   equal clicked, 6, '@on click: clickTwo'
 
@@ -132,7 +132,7 @@ test 'CST @controller', ->
     'ul':
       '@child lists':
         '@controller': childController
-        'li': '@parentMethod()'
+        'li': 'parentMethod()'
   equal fragment2[0].children[0].innerHTML, '<li>parent calls child</li><li>parent calls child</li><li>parent calls child</li>', 'child controller call parent method'
 
 test 'CST @if', ->
@@ -148,7 +148,7 @@ test 'CST @if', ->
         '@if': '@bool1'
         '@text': 'bool1 is true'
       'span #2':
-        '@if': '@getBool2()'
+        '@if': 'getBool2()'
         '@text': 'bool2 is true'
   equal fragment1[0].children[0].innerHTML, '<span>bool1 is true</span><!-- -->', 'ok'
 
@@ -163,7 +163,7 @@ test 'CST @if', ->
         '@if': '@bool1 && true'
         '@text': 'bool1 is true'
       'span #2':
-        '@if': '@getBool2() && true'
+        '@if': 'getBool2() && true'
         '@text': 'bool2 is true'
 
   equal fragment2[0].children[0].innerHTML, '<!-- --><span>bool2 is true</span>', 'ok'

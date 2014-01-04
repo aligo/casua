@@ -293,6 +293,9 @@ class casua.ArrayScope extends casua.Scope
 
   length: -> @_data.length
 
+  indexOf: (child) ->
+    @_data.indexOf child
+
   remove: (key) ->
     _scopeChangeLength @, ->
       _scopeRemovePrepare @, key
@@ -344,6 +347,12 @@ class casua.ArrayScope extends casua.Scope
     _scopeCallWatch @, pos, null, '$move'
     @
 
+  filter: (fn) ->
+    to_remove = []
+    for one, i in @_data
+      to_remove.push i unless fn.call @, one
+    @remove i for i in to_remove.reverse()
+
 casua.defineController = (init_fn) ->
 
   _renderNode = (_controller, _scope, _root, template) ->
@@ -361,7 +370,7 @@ casua.defineController = (init_fn) ->
           if r = node_meta.toLowerCase().match /^@(\w+)(?: (\S+))?$/
             switch r[1]
               when 'on'
-                m = child.match /^@?(\S+)(?:\(\))?$/
+                m = child.match /^(\S+?)(?:\(\))?$/
                 _root.on r[2], __resolveMethod(_controller, m[1])
               when 'html', 'text'
                 __nodeBind _controller, _root, r[1], _scope, child
@@ -449,8 +458,8 @@ casua.defineController = (init_fn) ->
   __compute_scope_regexp = /@(\S+)/g
   __compute_scope_key_regexp = /^@(\S+)$/
 
-  __compute_controller_regexp = /@(\S+)\(\)/g
-  __compute_controller_method_regexp = /^@(\S+)\(\)$/
+  __compute_controller_regexp = /(\S+)\(\)/g
+  __compute_controller_method_regexp = /^(\S+)\(\)$/
 
   __computeBind = (_controller, _scope, src, fn, to_eval = false) ->
     keys_to_watch = []
