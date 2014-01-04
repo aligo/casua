@@ -384,6 +384,8 @@ casua.defineController = (init_fn) ->
                 _renderNode _controller, _scope.get(r[2]), _root, child
               when 'if'
                 __nodeCondition _controller, _root, r[1], _scope, child
+              when 'unless'
+                __nodeCondition _controller, _root, r[1], _scope, child, true
         else
           node = new casua.Node node_meta
           ret_nodes.push node
@@ -444,10 +446,11 @@ casua.defineController = (init_fn) ->
     getter.call _scope
     _scope.$watch key, getter for key in _scope.$stopGetWatches()
 
-  __nodeCondition = (_controller, _node, _method, _scope, src) ->
+  __nodeCondition = (_controller, _node, _method, _scope, src, _unless = false) ->
     cur_node = true_node = _node
     false_node = new casua.Node '<!-- -->'
     __computeBind _controller, _scope, src, ( (result) ->
+      result = !result if _unless
       if result
         cur_node.replaceWith true_node
         cur_node = true_node

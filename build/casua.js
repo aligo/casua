@@ -691,6 +691,9 @@ Released under the MIT license
                   break;
                 case 'if':
                   __nodeCondition(_controller, _root, r[1], _scope, child);
+                  break;
+                case 'unless':
+                  __nodeCondition(_controller, _root, r[1], _scope, child, true);
               }
             }
           } else {
@@ -807,11 +810,17 @@ Released under the MIT license
       }
       return _results;
     };
-    __nodeCondition = function(_controller, _node, _method, _scope, src) {
+    __nodeCondition = function(_controller, _node, _method, _scope, src, _unless) {
       var cur_node, false_node, true_node;
+      if (_unless == null) {
+        _unless = false;
+      }
       cur_node = true_node = _node;
       false_node = new casua.Node('<!-- -->');
       return __computeBind(_controller, _scope, src, (function(result) {
+        if (_unless) {
+          result = !result;
+        }
         if (result) {
           cur_node.replaceWith(true_node);
           return cur_node = true_node;

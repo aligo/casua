@@ -7,3 +7,7 @@ ul.tasks-list li a {
 ul.tasks-list li.is-done {
   text-decoration:line-through;
 }
+a {
+  text-decoration: underline;
+  cursor: pointer;
+}

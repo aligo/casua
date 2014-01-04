@@ -9,14 +9,12 @@
         scope.get('tasks').push({
           'name': scope.get('new_task_name')
         });
-        scope.set('new_task_name', '');
-        return false;
+        return scope.set('new_task_name', '');
       },
       removeSelectedTasks: function() {
-        scope.get('tasks').filter(function(task) {
+        return scope.get('tasks').filter(function(task) {
           return !task.get('done');
         });
-        return false;
       }
     };
   });
@@ -33,8 +31,17 @@
         }
       },
       removeTask: function() {
-        tasks_scope.remove(tasks_scope.indexOf(scope));
-        return false;
+        return tasks_scope.remove(tasks_scope.indexOf(scope));
+      },
+      startEdit: function() {
+        return scope.set('editing', true);
+      },
+      saveChange: function(e) {
+        var keyCode;
+        keyCode = e.keyCode || e.which;
+        if (keyCode === 13) {
+          return scope.set('editing', false);
+        }
       }
     };
   });
@@ -46,16 +53,27 @@
       '@child tasks': {
         '@controller': TaskCtrl,
         'li': {
-          'input type="checkbox"': {
-            '@attr checked': '@done'
+          '.normal': {
+            '@unless': '@editing',
+            '@attr class': 'taskClass()',
+            '@on dblclick': 'startEdit()',
+            'input type="checkbox"': {
+              '@attr checked': '@done'
+            },
+            'span': {
+              '@html': 'Task {{@name}}'
+            },
+            'a': {
+              '@text': 'x',
+              '@on click': 'removeTask()'
+            }
           },
-          '@attr class': 'taskClass()',
-          'span': {
-            '@html': 'Task {{@name}}'
-          },
-          'a href="#"': {
-            '@text': 'x',
-            '@on click': 'removeTask()'
+          '.editing': {
+            '@if': '@editing',
+            'input type="text"': {
+              '@val': '@name',
+              '@on keyup': 'saveChange()'
+            }
           }
         }
       }
@@ -65,13 +83,13 @@
       '@val': '@new_task_name'
     },
     '.d1': {
-      'a href="#"': {
+      'a': {
         '@on click': 'addNewTask()',
         '@text': 'Add Task {{@new_task_name}}'
       }
     },
     '.d2': {
-      'a href="#"': {
+      'a': {
         '@on click': 'removeSelectedTasks()',
         '@text': 'Remove Selected Tasks'
       }

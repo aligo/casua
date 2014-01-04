@@ -4,11 +4,8 @@ TasksCtrl = casua.defineController (scope) ->
     scope.get('tasks').push
       'name': scope.get('new_task_name')
     scope.set 'new_task_name', ''
-    false
   removeSelectedTasks: ->
     scope.get('tasks').filter (task) -> not task.get 'done'
-    false
-
 TaskCtrl = casua.defineController (scope) ->
   tasks_scope = scope.get('$parent')
   taskClass: ->
@@ -18,7 +15,11 @@ TaskCtrl = casua.defineController (scope) ->
       ''
   removeTask: ->
     tasks_scope.remove tasks_scope.indexOf(scope)
-    false
+  startEdit: ->
+    scope.set 'editing', true
+  saveChange: (e) ->
+    keyCode = e.keyCode || e.which
+    scope.set 'editing', false if keyCode == 13
       
 app_node = new casua.Node document.getElementById('todo-app')
 
@@ -27,23 +28,31 @@ template =
    '@child tasks':
       '@controller': TaskCtrl
       'li':
-        'input type="checkbox"':
-          '@attr checked': '@done'
-        '@attr class': 'taskClass()'
-        'span':
-          '@html': 'Task {{@name}}'
-        'a href="#"':
-          '@text': 'x'
-          '@on click': 'removeTask()'
+        '.normal':
+          '@unless': '@editing'
+          '@attr class': 'taskClass()'
+          '@on dblclick': 'startEdit()'
+          'input type="checkbox"':
+            '@attr checked': '@done'
+          'span':
+            '@html': 'Task {{@name}}'
+          'a':
+            '@text': 'x'
+            '@on click': 'removeTask()'
+        '.editing':
+          '@if': '@editing'
+          'input type="text"':
+            '@val': '@name'
+            '@on keyup': 'saveChange()'
   '.d0': 'Count: {{@tasks.length}}'
   'input type="text"':
     '@val': '@new_task_name'
   '.d1':
-    'a href="#"':
+    'a':
       '@on click': 'addNewTask()'
       '@text': 'Add Task {{@new_task_name}}'
   '.d2':
-    'a href="#"':
+    'a':
       '@on click': 'removeSelectedTasks()'
       '@text': 'Remove Selected Tasks'
 
