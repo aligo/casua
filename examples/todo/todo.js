@@ -53,27 +53,23 @@
       '@child tasks': {
         '@controller': TaskCtrl,
         'li': {
-          '.normal': {
-            '@unless': '@editing',
-            '@attr class': 'taskClass()',
-            '@on dblclick': 'startEdit()',
-            'input type="checkbox"': {
-              '@attr checked': '@done'
-            },
-            'span': {
-              '@html': 'Task {{@name}}'
-            },
-            'a': {
-              '@text': 'x',
-              '@on click': 'removeTask()'
-            }
+          '@attr class': 'taskClass()',
+          'input type="checkbox"': {
+            '@attr checked': '@done'
           },
-          '.editing': {
+          'span': {
+            '@unless': '@editing',
+            '@on dblclick': 'startEdit()',
+            '@html': 'Task {{@name}}'
+          },
+          'input type="text"': {
             '@if': '@editing',
-            'input type="text"': {
-              '@val': '@name',
-              '@on keyup': 'saveChange()'
-            }
+            '@val': '@name',
+            '@on keyup': 'saveChange()'
+          },
+          'a': {
+            '@text': 'x',
+            '@on click': 'removeTask()'
           }
         }
       }

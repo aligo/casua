@@ -28,22 +28,20 @@ template =
    '@child tasks':
       '@controller': TaskCtrl
       'li':
-        '.normal':
+        '@attr class': 'taskClass()'
+        'input type="checkbox"':
+          '@attr checked': '@done'
+        'span':
           '@unless': '@editing'
-          '@attr class': 'taskClass()'
           '@on dblclick': 'startEdit()'
-          'input type="checkbox"':
-            '@attr checked': '@done'
-          'span':
-            '@html': 'Task {{@name}}'
-          'a':
-            '@text': 'x'
-            '@on click': 'removeTask()'
-        '.editing':
+          '@html': 'Task {{@name}}'
+        'input type="text"':
           '@if': '@editing'
-          'input type="text"':
-            '@val': '@name'
-            '@on keyup': 'saveChange()'
+          '@val': '@name'
+          '@on keyup': 'saveChange()'
+        'a':
+          '@text': 'x'
+          '@on click': 'removeTask()'
   '.d0': 'Count: {{@tasks.length}}'
   'input type="text"':
     '@val': '@new_task_name'
