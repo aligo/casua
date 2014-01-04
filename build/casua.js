@@ -776,13 +776,21 @@ Released under the MIT license
       }
     };
     __nodeValueBind = function(_controller, _node, _scope, src) {
-      var getter, key, r, setter, _i, _len, _ref, _results;
+      var getter, key, method, r, setter, _i, _len, _ref, _results;
       if (r = src.match(__compute_scope_key_regexp)) {
         getter = function() {
           return _node.val(_scope.get(r[1]));
         };
         setter = function() {
           return _scope.set(r[1], _node.val());
+        };
+      } else if (r = src.match(__compute_controller_method_regexp)) {
+        method = __resolveMethod(_controller, r[1]);
+        getter = function() {
+          return _node.val(method.call(_controller));
+        };
+        setter = function() {
+          return method.call(_controller, _node.val());
         };
       } else {
         return __nodeBind(_controller, _root, 'val', _scope, child);
@@ -826,7 +834,7 @@ Released under the MIT license
       }
       keys_to_watch = [];
       watch_fn = (r = src.match(__compute_controller_method_regexp)) ? (method = __resolveMethod(_controller, r[1]), function() {
-        return fn.call({}, method.call(_controller));
+        return fn.call({}, method);
       }) : (r = src.match(__compute_scope_key_regexp)) ? function() {
         return fn.call({}, this.get(r[1]));
       } : (r = src.match(__compute_match_regexp)) ? function() {

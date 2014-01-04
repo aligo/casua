@@ -94,9 +94,18 @@ test 'CST @attr', ->
   equal fragment3[0].children[0].outerHTML, '<div class=\"original another-1\"></div>', 'bind @class for short'
 
 test 'CST @val', ->
-  testController = casua.defineController ->
+  changed = 0
+  testController = casua.defineController (scope) ->
+    test2: (value) ->
+      if value?
+        changed += 1
+        scope.set 'test2', value
+      else
+        scope.get 'test2'
+
   testCtrlInst = new testController
     test: 'value1'
+    test2: 'value2'
   scope = testCtrlInst.scope
   fragment1 = testCtrlInst.render
     'input':
@@ -108,3 +117,17 @@ test 'CST @val', ->
   fragment1[0].children[0].value = 'set new'
   _test._trigger fragment1[0].children[0], 'keyup'
   equal scope.get('test'), 'set new', 'bind @val setter'
+
+  fragment2 = testCtrlInst.render
+    'input':
+      '@val': 'test2()'
+
+  equal fragment2[0].children[0].value, 'value2', 'bind @val controller method'
+  scope.set 'test2', 'new'
+  equal fragment2[0].children[0].value, 'new', 'bind @val getter controller method'
+
+  fragment2[0].children[0].value = 'set new'
+  _test._trigger fragment2[0].children[0], 'keyup'
+  equal scope.get('test2'), 'set new', 'bind @val setter controller method'
+  equal changed, 1, 'bind @val sette controller methodr'
+  

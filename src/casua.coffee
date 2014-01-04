@@ -432,6 +432,10 @@ casua.defineController = (init_fn) ->
     if r = src.match __compute_scope_key_regexp
       getter = -> _node.val _scope.get(r[1])
       setter = -> _scope.set r[1], _node.val()
+    else if r = src.match __compute_controller_method_regexp
+      method = __resolveMethod _controller, r[1]
+      getter = -> _node.val method.call(_controller)
+      setter = -> method.call _controller, _node.val()
     else
       return __nodeBind _controller, _root, 'val', _scope, child
     _node.on 'change', setter
@@ -465,7 +469,7 @@ casua.defineController = (init_fn) ->
     keys_to_watch = []
     watch_fn = if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
-      -> fn.call {}, method.call(_controller)
+      -> fn.call {}, method
     else if r = src.match __compute_scope_key_regexp
       -> fn.call {}, @get(r[1])
     else if r = src.match __compute_match_regexp
