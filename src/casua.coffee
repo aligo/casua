@@ -469,7 +469,7 @@ casua.defineController = (init_fn) ->
     keys_to_watch = []
     watch_fn = if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
-      -> fn.call {}, method
+      -> fn.call {}, method.call(_controller)
     else if r = src.match __compute_scope_key_regexp
       -> fn.call {}, @get(r[1])
     else if r = src.match __compute_match_regexp

@@ -834,7 +834,7 @@ Released under the MIT license
       }
       keys_to_watch = [];
       watch_fn = (r = src.match(__compute_controller_method_regexp)) ? (method = __resolveMethod(_controller, r[1]), function() {
-        return fn.call({}, method);
+        return fn.call({}, method.call(_controller));
       }) : (r = src.match(__compute_scope_key_regexp)) ? function() {
         return fn.call({}, this.get(r[1]));
       } : (r = src.match(__compute_match_regexp)) ? function() {
