@@ -403,6 +403,8 @@ Released under the MIT license
       }
       if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
         return this.get(r[1]).get(r[2]);
+      } else if (key === '$parent') {
+        return this._parent;
       } else {
         ret = this._data[key];
         if ((ret == null) && (this._parent != null)) {
@@ -627,14 +629,14 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(init_fn) {
-    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __keep_original_attr_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, __nodeValueBind, _renderNode, _renderNodes;
+    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __keep_original_attr_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, __nodeValueBind, __resolveMethod, _renderNode, _renderNodes;
     _renderNode = function(_controller, _scope, _root, template) {
       var child, m, new_controller, new_template, node, node_meta, r, ret_nodes;
       if (_scope instanceof casua.ArrayScope) {
         return _renderNodes(_controller, _scope, _root, template);
       } else if (template['@controller']) {
         new_template = _shallowCopy(template);
-        new_controller = new template['@controller'](_scope);
+        new_controller = new template['@controller'](_scope, _controller);
         delete new_template['@controller'];
         return _renderNode(new_controller, _scope, _root, new_template);
       } else {
@@ -646,7 +648,7 @@ Released under the MIT license
               switch (r[1]) {
                 case 'on':
                   m = child.match(/^@?(\S+)(?:\(\))?$/);
-                  _root.on(r[2], _controller.methods[m[1]]);
+                  _root.on(r[2], __resolveMethod(_controller, m[1]));
                   break;
                 case 'html':
                 case 'text':
@@ -795,14 +797,14 @@ Released under the MIT license
     __compute_controller_regexp = /@(\S+)\(\)/g;
     __compute_controller_method_regexp = /^@(\S+)\(\)$/;
     __computeBind = function(_controller, _scope, src, fn, to_eval) {
-      var key, keys_to_watch, r, watch_fn, _i, _len, _ref, _results;
+      var key, keys_to_watch, method, r, watch_fn, _i, _len, _ref, _results;
       if (to_eval == null) {
         to_eval = false;
       }
       keys_to_watch = [];
-      watch_fn = (r = src.match(__compute_controller_method_regexp)) ? function() {
-        return fn.call({}, _controller.methods[r[1]].call(_controller));
-      } : (r = src.match(__compute_scope_key_regexp)) ? function() {
+      watch_fn = (r = src.match(__compute_controller_method_regexp)) ? (method = __resolveMethod(_controller, r[1]), function() {
+        return fn.call({}, method.call(_controller));
+      }) : (r = src.match(__compute_scope_key_regexp)) ? function() {
         return fn.call({}, this.get(r[1]));
       } : (r = src.match(__compute_match_regexp)) ? function() {
         var scope;
@@ -813,7 +815,8 @@ Released under the MIT license
         }));
       } : to_eval ? (src = src.replace(__compute_controller_regexp, function(part) {
         part = part.match(__compute_controller_method_regexp);
-        return '_controller.methods.' + part[1] + '.call(_controller)';
+        method = __resolveMethod(_controller, part[1]);
+        return 'method.call(_controller)';
       }), src = src.replace(__compute_scope_regexp, function(part) {
         part = part.match(__compute_scope_key_regexp);
         return '_scope.get("' + part[1] + '")';
@@ -832,10 +835,26 @@ Released under the MIT license
       }
       return _results;
     };
+    __resolveMethod = function(_controller, method) {
+      var resolved_controller, resolved_method;
+      resolved_controller = _controller;
+      while (true) {
+        resolved_method = resolved_controller.methods != null ? resolved_controller.methods[method] : void 0;
+        if (resolved_method != null) {
+          break;
+        } else {
+          if (!(resolved_controller = resolved_controller._parent)) {
+            break;
+          }
+        }
+      }
+      return resolved_method;
+    };
     return (function() {
-      function _Class(init_data) {
+      function _Class(init_data, _parent) {
+        this._parent = _parent;
         this.scope = new casua.Scope(init_data);
-        this.methods = init_fn.call(this, this.scope, this);
+        this.methods = init_fn.call(this, this.scope, this, this._parent);
       }
 
       _Class.prototype.renderAt = function(container, template) {

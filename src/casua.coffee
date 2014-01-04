@@ -228,6 +228,8 @@ class casua.Scope
     @_watch_lists.push key if @_watch_lists && @_watch_lists.indexOf(key) == -1
     if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
       @get(r[1]).get(r[2])
+    else if key == '$parent'
+      @_parent
     else
       ret = @_data[key]
       ret = @_parent.get(key) if !ret? && @_parent?
@@ -349,7 +351,7 @@ casua.defineController = (init_fn) ->
       _renderNodes _controller, _scope, _root, template
     else if template['@controller']
       new_template = _shallowCopy template
-      new_controller = new template['@controller'](_scope)
+      new_controller = new template['@controller'](_scope, _controller)
       delete new_template['@controller']
       _renderNode new_controller, _scope, _root, new_template
     else
@@ -360,7 +362,7 @@ casua.defineController = (init_fn) ->
             switch r[1]
               when 'on'
                 m = child.match /^@?(\S+)(?:\(\))?$/
-                _root.on r[2], _controller.methods[m[1]]
+                _root.on r[2], __resolveMethod(_controller, m[1])
               when 'html', 'text'
                 __nodeBind _controller, _root, r[1], _scope, child
               when 'val'
@@ -453,7 +455,8 @@ casua.defineController = (init_fn) ->
   __computeBind = (_controller, _scope, src, fn, to_eval = false) ->
     keys_to_watch = []
     watch_fn = if r = src.match __compute_controller_method_regexp
-      -> fn.call {}, _controller.methods[r[1]].call(_controller)
+      method = __resolveMethod _controller, r[1]
+      -> fn.call {}, method.call(_controller)
     else if r = src.match __compute_scope_key_regexp
       -> fn.call {}, @get(r[1])
     else if r = src.match __compute_match_regexp
@@ -465,7 +468,8 @@ casua.defineController = (init_fn) ->
     else if to_eval
       src = src.replace __compute_controller_regexp, (part) ->
         part = part.match __compute_controller_method_regexp
-        '_controller.methods.' + part[1] + '.call(_controller)'
+        method = __resolveMethod _controller, part[1]
+        'method.call(_controller)'
       src = src.replace __compute_scope_regexp, (part) ->
         part = part.match __compute_scope_key_regexp
         '_scope.get("' + part[1] + '")'
@@ -476,10 +480,21 @@ casua.defineController = (init_fn) ->
     watch_fn.call _scope
     _scope.$watch key, watch_fn for key in _scope.$stopGetWatches()
 
+  __resolveMethod = (_controller, method) ->
+    resolved_controller = _controller
+    while true
+      resolved_method = if resolved_controller.methods?
+        resolved_controller.methods[method]
+      if resolved_method?
+        break
+      else
+        break unless resolved_controller = resolved_controller._parent
+    resolved_method
+
   class
-    constructor: (init_data) ->
+    constructor: (init_data, @_parent) ->
       @scope = new casua.Scope init_data
-      @methods = init_fn.call @, @scope, @
+      @methods = init_fn.call @, @scope, @, @_parent
 
     renderAt: (container, template) ->
       _renderNode @, @scope, (new casua.Node container).empty(), template

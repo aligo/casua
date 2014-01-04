@@ -41,6 +41,8 @@ test 'Should can handle mutitple-levels scope', ->
   equal scope.get('level2').get('level3').get('test'), 'new', 'set mutitple-levels scope with dots format'
   deepEqual watched, ['new', 3, 'test'], 'watch mutitple-levels scope with dots format'
 
+  equal scope.get('level2.level3.$parent'), scope.get('level2'), 'get $parent'
+
 test 'Should can be created to ArrayScope', ->
   scope = new casua.Scope [1, 2, 3]
   equal (scope instanceof casua.ArrayScope), true, 'is a instance of casua.ArrayScope'

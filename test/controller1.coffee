@@ -99,8 +99,18 @@ test 'CST @child ArrayScope', ->
 
 test 'CST @controller', ->
   testController = casua.defineController ->
+    test_methods =
+      name: ->
+        'parent'
+      parentMethod: ->
+        test_methods.name() + ' calls ' + @methods.childMethod()
   childController = casua.defineController (scope) ->
     scope.set 'name', 'task' + scope.get('no')
+    child_methods =
+      name: ->
+        'child'
+      childMethod: ->
+        child_methods.name()
   testCtrlInst = new testController
     lists: []
   lists = testCtrlInst.scope.get('lists')
@@ -117,6 +127,13 @@ test 'CST @controller', ->
   lists.push { no: 3 }
   equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li><li>task3</li>', '3 childs'
   equal fragment1[0].children[1].innerHTML, '3 lists', '3 childs'
+
+  fragment2 = testCtrlInst.render
+    'ul':
+      '@child lists':
+        '@controller': childController
+        'li': '@parentMethod()'
+  equal fragment2[0].children[0].innerHTML, '<li>parent calls child</li><li>parent calls child</li><li>parent calls child</li>', 'child controller call parent method'
 
 test 'CST @if', ->
   testController = casua.defineController (scope) ->
