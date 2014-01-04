@@ -370,7 +370,7 @@ casua.defineController = (init_fn) ->
           if r = node_meta.toLowerCase().match /^@(\w+)(?: (\S+))?$/
             switch r[1]
               when 'on'
-                m = child.match /^(\S+?)(?:\(\))?$/
+                m = child.match __compute_controller_method_regexp
                 _root.on r[2], __resolveMethod(_controller, m[1])
               when 'html', 'text'
                 __nodeBind _controller, _root, r[1], _scope, child
@@ -473,7 +473,11 @@ casua.defineController = (init_fn) ->
         scope = @
         fn.call {}, src.replace __compute_match_regexp, (part) ->
           part = part.match __compute_match_key_regexp
-          scope.get part[1]
+          if r = part[1].match __compute_controller_method_regexp
+            method = __resolveMethod _controller, r[1]
+            method.call(_controller)
+          else if r = part[1].match __compute_scope_key_regexp
+            scope.get(r[1])
     else if to_eval
       src = src.replace __compute_controller_regexp, (part) ->
         part = part.match __compute_controller_method_regexp

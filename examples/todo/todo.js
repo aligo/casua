@@ -66,7 +66,7 @@
     },
     '.d1': {
       'a href="#"': {
-        '@on click': 'addNewTask',
+        '@on click': 'addNewTask()',
         '@text': 'Add Task {{new_task_name}}'
       }
     },

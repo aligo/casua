@@ -31,30 +31,6 @@ test 'array scope', ->
     title: 'one'
   equal container.html(), '<li><span>one</span></li><li><span>two</span></li><li><span>three</span></li>', 'watch $move'
 
-test 'CST @on', ->
-  clicked = 0
-  testController = casua.defineController ->
-    clickOne: -> 
-      clicked = 1
-    clickTwo: -> 
-      clicked += 5
-  testCtrlInst = new testController {}
-  fragment1 = testCtrlInst.render
-    'a':
-      '@on click': 'clickOne'
-  _test._trigger fragment1[0].children[0], 'click'
-  equal clicked, 1, '@on click: clickOne'
-
-  fragment2 = testCtrlInst.render
-    'a':
-      '@on click': 'clickOne()'
-      '@on click': 'clickTwo'
-  _test._trigger fragment2[0].children[0], 'click'
-  equal clicked, 6, '@on click: clickTwo'
-
-  _test._trigger fragment1[0].children[0], 'click'
-  equal clicked, 1, '@on click: clickOne'
-
 test 'CST @child', ->
   testController = casua.defineController ->
   testCtrlInst = new testController
@@ -67,7 +43,7 @@ test 'CST @child', ->
       'h1': '@test'
       '@child child_test':
         'h2': '@test2'
-        'div': '{{test3}}'
+        'div': '{{@test3}}'
 
   equal fragment1[0].children[0].innerHTML, '<h1>parent</h1><h2>child</h2><div>this is a child</div>', 'child 1'
 
@@ -84,7 +60,7 @@ test 'CST @child ArrayScope', ->
   fragment1 = testCtrlInst.render
     'ul':
       '@child lists':
-        'li': 'task{{no}}'
+        'li': 'task{{@no}}'
   equal fragment1[0].children[0].innerHTML, '', 'no child'
 
   lists.push { no: 1 }
@@ -118,8 +94,8 @@ test 'CST @controller', ->
     'ul':
       '@child lists':
         '@controller': childController
-        'li': '{{name}}'
-    'span': '{{lists.length}} lists'
+        'li': '{{@name}}'
+    'span': '{{@lists.length}} lists'
   lists.push { no: 1 }
   lists.push { no: 2 }
   equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li>', '2 childs'

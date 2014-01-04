@@ -670,7 +670,7 @@ Released under the MIT license
             if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
               switch (r[1]) {
                 case 'on':
-                  m = child.match(/^(\S+?)(?:\(\))?$/);
+                  m = child.match(__compute_controller_method_regexp);
                   _root.on(r[2], __resolveMethod(_controller, m[1]));
                   break;
                 case 'html':
@@ -834,7 +834,12 @@ Released under the MIT license
         scope = this;
         return fn.call({}, src.replace(__compute_match_regexp, function(part) {
           part = part.match(__compute_match_key_regexp);
-          return scope.get(part[1]);
+          if (r = part[1].match(__compute_controller_method_regexp)) {
+            method = __resolveMethod(_controller, r[1]);
+            return method.call(_controller);
+          } else if (r = part[1].match(__compute_scope_key_regexp)) {
+            return scope.get(r[1]);
+          }
         }));
       } : to_eval ? (src = src.replace(__compute_controller_regexp, function(part) {
         part = part.match(__compute_controller_method_regexp);
