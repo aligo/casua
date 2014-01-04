@@ -533,7 +533,7 @@ casua.defineController = (init_fn) ->
   class
     constructor: (init_data, @_parent) ->
       @scope = new casua.Scope init_data
-      @methods = init_fn.call @, @scope, @, @_parent
+      @methods = init_fn.call @, @scope, @
 
     renderAt: (container, template) ->
       _renderNode @, @scope, (new casua.Node container).empty(), template

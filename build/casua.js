@@ -926,7 +926,7 @@ Released under the MIT license
       function _Class(init_data, _parent) {
         this._parent = _parent;
         this.scope = new casua.Scope(init_data);
-        this.methods = init_fn.call(this, this.scope, this, this._parent);
+        this.methods = init_fn.call(this, this.scope, this);
       }
 
       _Class.prototype.renderAt = function(container, template) {
