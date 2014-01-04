@@ -15,8 +15,12 @@ test 'Should can parse node_meta to build DOM node', ->
     'a href="/?a=b" target=\'_blank\' data-test="te\'st" only-prop': '<a only-prop=\"only-prop\" data-test=\"te\'st\" target=\"_blank\" href=\"/?a=b\"></a>'
 
   for node_meta, expect_html of tests_data
-    nd = new casua.Node node_meta
-    equal nd[0].outerHTML, expect_html, '"' + node_meta + '" is ok'
+    node = new casua.Node node_meta
+    equal node[0].outerHTML, expect_html, '"' + node_meta + '" is ok'
+
+test 'Should can access by dom element', ->
+  node = new casua.Node 'div'
+  equal node[0]._node, node, 'ok'
 
 test 'Should can get and set attribute by attr()', ->
   node = new casua.Node ''
@@ -108,3 +112,18 @@ test 'Should can get and set boolean attribute by attr()', ->
   node.attr 'checked', true
   equal node[0].outerHTML, '<input checked=\"checked\" type=\"checkbox\">', 'set'
   equal node.attr('checked'), true, 'get'
+
+test 'Should can parent()', ->
+  parent = new casua.Node '.parent'
+  child = new casua.Node '.child'
+  parent.append child
+  equal child.parent(), parent, 'ok'
+
+test 'Should can find()', ->
+  parent = new casua.Node '.parent'
+  child1 = new casua.Node '#child1'
+  child2 = new casua.Node '.child2'
+  parent.append child1
+  parent.append child2
+  equal parent.find('#child1'), child1, 'ok'
+  equal parent.find('.child2'), child2, 'ok'

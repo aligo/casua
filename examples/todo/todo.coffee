@@ -16,7 +16,9 @@ TaskCtrl = casua.defineController (scope) ->
   removeTask: ->
     tasks_scope.remove tasks_scope.indexOf(scope)
   startEdit: ->
+    li = @_node.parent().parent()
     scope.set 'editing', true
+    li.find('input.name').trigger 'focus'
   saveChange: (e) ->
     keyCode = e.keyCode || e.which
     scope.set 'editing', false if keyCode == 13
@@ -29,19 +31,20 @@ template =
       '@controller': TaskCtrl
       'li':
         '@attr class': 'taskClass()'
-        'input type="checkbox"':
-          '@attr checked': '@done'
         'span':
           '@unless': '@editing'
-          '@on dblclick': 'startEdit()'
-          '@html': 'Task {{@name}}'
-        'input type="text"':
+          'input type="checkbox"':
+            '@attr checked': '@done'
+          'span':
+            '@on dblclick': 'startEdit()'
+            '@html': 'Task {{@name}}'
+          'a':
+            '@text': 'x'
+            '@on click': 'removeTask()'
+        'input.name type="text"':
           '@if': '@editing'
           '@val': '@name'
           '@on keyup': 'saveChange()'
-        'a':
-          '@text': 'x'
-          '@on click': 'removeTask()'
   '.d0': 'Count: {{@tasks.length}}'
   'input type="text"':
     '@val': '@new_task_name'

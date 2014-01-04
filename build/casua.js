@@ -8,7 +8,7 @@ Released under the MIT license
 
 
 (function() {
-  var casua, k, v, __boolean_attr_regexp, __mutiple_levels_key_regexp, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeChangeLength, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
+  var casua, k, v, __boolean_attr_regexp, __mutiple_levels_key_regexp, _css_selector, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeChangeLength, _scopeInitParent, _scopeRemovePrepare, _shallowCopy,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -47,10 +47,12 @@ Released under the MIT license
 
   __boolean_attr_regexp = /^multiple|selected|checked|disabled|required|open$/;
 
+  _css_selector = typeof document.querySelectorAll === 'function';
+
   casua = {};
 
   casua.Node = (function() {
-    var __addEventListenerFn, __createEventHanlder, _addNodes, _forEach, _push;
+    var __addEventListenerFn, __createEventHanlder, __trigger_to_dom_regexp, _addNodes, _forEach, _push;
 
     _addNodes = function(_node, elements) {
       var element, _i, _len, _results;
@@ -60,6 +62,7 @@ Released under the MIT license
       _results = [];
       for (_i = 0, _len = elements.length; _i < _len; _i++) {
         element = elements[_i];
+        element._node = _node;
         _results.push(_push(_node, element));
       }
       return _results;
@@ -126,6 +129,8 @@ Released under the MIT license
       return ret;
     };
 
+    __trigger_to_dom_regexp = /^focus$/;
+
     function Node(node_meta) {
       var attr, attrs_data, child, div, el, r, tag_data, _i, _j, _len, _len1, _ref;
       this.handlers = {};
@@ -161,7 +166,7 @@ Released under the MIT license
             _addNodes(this, child);
           }
         }
-      } else if (node_meta.nodeName) {
+      } else {
         _addNodes(this, node_meta);
       }
     }
@@ -261,8 +266,12 @@ Released under the MIT license
     };
 
     Node.prototype.trigger = function(type, event_data) {
+      var trigger_to_dom;
       if (event_data == null) {
         event_data = {};
+      }
+      if (type.match(__trigger_to_dom_regexp)) {
+        trigger_to_dom = true;
       }
       _forEach(this, function() {
         var event, key, value;
@@ -272,7 +281,10 @@ Released under the MIT license
           value = event_data[key];
           event[key] = value;
         }
-        return this.dispatchEvent(event);
+        this.dispatchEvent(event);
+        if (trigger_to_dom) {
+          return this[type]();
+        }
       });
       return this;
     };
@@ -308,6 +320,21 @@ Released under the MIT license
         return this;
       } else {
         return this[0].value;
+      }
+    };
+
+    Node.prototype.parent = function() {
+      var parent;
+      if (parent = this[0].parentNode) {
+        return parent._node || new casua.Node(parent);
+      }
+    };
+
+    Node.prototype.find = function(query) {
+      var element;
+      element = _css_selector ? this[0].querySelector(query) : this[0].getElementsByTagName(query);
+      if (element) {
+        return element._node || new casua.Node(element);
       }
     };
 

@@ -34,7 +34,10 @@
         return tasks_scope.remove(tasks_scope.indexOf(scope));
       },
       startEdit: function() {
-        return scope.set('editing', true);
+        var li;
+        li = this._node.parent().parent();
+        scope.set('editing', true);
+        return li.find('input.name').trigger('focus');
       },
       saveChange: function(e) {
         var keyCode;
@@ -54,22 +57,24 @@
         '@controller': TaskCtrl,
         'li': {
           '@attr class': 'taskClass()',
-          'input type="checkbox"': {
-            '@attr checked': '@done'
-          },
           'span': {
             '@unless': '@editing',
-            '@on dblclick': 'startEdit()',
-            '@html': 'Task {{@name}}'
+            'input type="checkbox"': {
+              '@attr checked': '@done'
+            },
+            'span': {
+              '@on dblclick': 'startEdit()',
+              '@html': 'Task {{@name}}'
+            },
+            'a': {
+              '@text': 'x',
+              '@on click': 'removeTask()'
+            }
           },
-          'input type="text"': {
+          'input.name type="text"': {
             '@if': '@editing',
             '@val': '@name',
             '@on keyup': 'saveChange()'
-          },
-          'a': {
-            '@text': 'x',
-            '@on click': 'removeTask()'
           }
         }
       }

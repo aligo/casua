@@ -19,13 +19,15 @@ _escapeHTML = (str) ->
 
 __boolean_attr_regexp = /^multiple|selected|checked|disabled|required|open$/
 
+_css_selector = typeof document.querySelectorAll is 'function'
+
 casua = {}
 
 class casua.Node
   _addNodes = (_node, elements) ->
-    if elements.nodeName
-      elements = [elements]
+    elements = [elements] if elements.nodeName
     for element in elements
+      element._node = _node
       _push _node, element
 
   _push = (_node, one) ->
@@ -67,6 +69,8 @@ class casua.Node
     ret.handleds = []
     ret
 
+  __trigger_to_dom_regexp = /^focus$/
+
   constructor: (node_meta) ->
     @handlers = {}
     @events = {}
@@ -95,7 +99,7 @@ class casua.Node
         div.removeChild div.firstChild
         for child in div.childNodes
           _addNodes @, child
-    else if node_meta.nodeName
+    else
       _addNodes @, node_meta
 
   attr: (name, value) ->
@@ -158,11 +162,14 @@ class casua.Node
     @
 
   trigger: (type, event_data = {}) ->
+    if type.match __trigger_to_dom_regexp
+      trigger_to_dom = true
     _forEach @, ->
       event = document.createEvent 'HTMLEvents'
       event.initEvent type, true, true
       event[key] = value for key, value of event_data
       @dispatchEvent event
+      @[type]() if trigger_to_dom
     @
 
   remove: ->
@@ -180,6 +187,18 @@ class casua.Node
       @
     else
       @[0].value
+
+  parent: ->
+    if parent = @[0].parentNode
+      parent._node || new casua.Node parent
+
+  find: (query) ->
+    element = if _css_selector
+      @[0].querySelector query
+    else
+      @[0].getElementsByTagName query
+    if element
+      element._node || new casua.Node element
 
 _scopeInitParent = (_scope, _parent) ->
   _scope._childs = []
