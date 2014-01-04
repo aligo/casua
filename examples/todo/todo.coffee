@@ -31,17 +31,17 @@ template =
           '@attr checked': '@done'
         '@attr class': 'taskClass()'
         'span':
-          '@html': 'Task {{name}}'
+          '@html': 'Task {{@name}}'
         'a href="#"':
           '@text': 'x'
           '@on click': 'removeTask()'
-  '.d0': 'Count: {{tasks.length}}'
+  '.d0': 'Count: {{@tasks.length}}'
   'input type="text"':
     '@val': '@new_task_name'
   '.d1':
     'a href="#"':
       '@on click': 'addNewTask()'
-      '@text': 'Add Task {{new_task_name}}'
+      '@text': 'Add Task {{@new_task_name}}'
   '.d2':
     'a href="#"':
       '@on click': 'removeSelectedTasks()'
