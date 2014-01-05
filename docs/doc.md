@@ -46,7 +46,7 @@ Remove all child nodes
 
 ### find
 `node.find(query)`
- - `query` *[ String ]* CSS3 Selector's query if broswer supports, lookups by tag name if not
+ - `query` *[ String ]* CSS3 Selector's querying if broswer supports, looking-up by tag name if not
  - Returns `casua.Node` found node(s)
 
 ### html
@@ -87,3 +87,38 @@ Remove all child nodes
 `node.val(value)` set the value
  - `value` *[ Any ]* the value to set
  - Returns `node` self
+
+## casua.Scope
+casua.Scope basically like a js object, has attributes that is used to contain data, the difference is that casua.Scope with a pair of get () and set () method to change their attributes, so related watch handlers can be fired the scope of what data has been modified in order to update the view.
+
+### constructor / initialize  
+`new casua.Scope(init_data, [parent])`
+ - `init_data` *[ Object ]* initial data
+ - `parent` *[ casua.Scope ]* parent scope attached to this new scope
+ - Returns a *[ casua.Scope ]*
+
+### get
+`scope.get(key)`
+ - `key` *[ String ]*
+ - Returns *[ Any / casua.Scope ]*
+
+examples:
+```coffeescript
+scope = new casua.Scope {
+  name: 'Joe'
+  age: 35
+  job: {
+    company: 'cool'
+    title: 'coder'
+  }
+}
+scope.get('name') # => 'Joe'
+scope.get('job') # => *[ casua.Scope ]*
+scope.get('job').get('company') # => 'cool'
+scope.get('job.title') # => 'coder'
+job_scope = scope.get('job')
+job_scope.get('$parent') # => *[ casua.Scope ]* back to scope
+job_scope.get('$parent.age') # => 35
+scope.get('$parent.job.company') # => 'cool'
+```
+
