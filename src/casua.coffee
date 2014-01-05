@@ -390,9 +390,9 @@ casua.defineController = (init_fn) ->
           if r = node_meta.toLowerCase().match /^@(\w+)(?: (\S+))?$/
             switch r[1]
               when 'on'
-                m = child.match __compute_controller_method_regexp
-                method = __resolveMethod(_controller, m[1])
-                _root.on r[2], (e) -> method.call _context, e
+                if m = child.match __compute_controller_method_regexp
+                  method = __resolveMethod(_controller, m[1])
+                  _root.on r[2], (e) -> method.call _context, e
               when 'html', 'text'
                 __nodeBind _controller, _root, r[1], _scope, _context, child
               when 'val'
@@ -450,10 +450,10 @@ casua.defineController = (init_fn) ->
     $parent = context
     while parent
       for name, fn of parent.methods
-        $parent[name] = fn
-        context[name] ||= fn
-      if parent = parent._parent
-        $parent = $parent.$parent = {}
+        bound_fn = fn.bind context
+        $parent[name] = bound_fn
+        context[name] ||= bound_fn
+      $parent = $parent.$parent = {} if parent = parent._parent
     context
 
   __nodeBind = (_controller, _node, _method, _scope, _context, src) ->

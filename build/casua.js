@@ -698,11 +698,12 @@ Released under the MIT license
             if (r = node_meta.toLowerCase().match(/^@(\w+)(?: (\S+))?$/)) {
               switch (r[1]) {
                 case 'on':
-                  m = child.match(__compute_controller_method_regexp);
-                  method = __resolveMethod(_controller, m[1]);
-                  _root.on(r[2], function(e) {
-                    return method.call(_context, e);
-                  });
+                  if (m = child.match(__compute_controller_method_regexp)) {
+                    method = __resolveMethod(_controller, m[1]);
+                    _root.on(r[2], function(e) {
+                      return method.call(_context, e);
+                    });
+                  }
                   break;
                 case 'html':
                 case 'text':
@@ -790,7 +791,7 @@ Released under the MIT license
       });
     };
     _generateContext = function(_controller, _node, named_nodes) {
-      var $parent, context, fn, name, parent, _ref;
+      var $parent, bound_fn, context, fn, name, parent, _ref;
       context = {
         $node: function(name) {
           if (name != null) {
@@ -810,8 +811,9 @@ Released under the MIT license
         _ref = parent.methods;
         for (name in _ref) {
           fn = _ref[name];
-          $parent[name] = fn;
-          context[name] || (context[name] = fn);
+          bound_fn = fn.bind(context);
+          $parent[name] = bound_fn;
+          context[name] || (context[name] = bound_fn);
         }
         if (parent = parent._parent) {
           $parent = $parent.$parent = {};

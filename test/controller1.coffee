@@ -141,3 +141,36 @@ test 'CST @if', ->
         '@text': 'bool2 is true'
 
   equal fragment2[0].children[0].innerHTML, '<!-- --><span>bool2 is true</span>', 'ok'
+
+test 'Controller Context', ->
+  changed = 0
+  testController = casua.defineController ->
+    add: -> 1
+    name: -> 'parent'
+    parentMethod: -> @$parent.name() + ' calls ' + @childMethod()
+    clickMethod: ->
+      changed += @add()
+  childController = casua.defineController (scope) ->
+    scope.set 'name', 'task' + scope.get('no')
+    add: -> 2
+    name: -> 'child'
+    childMethod: -> @name()
+
+  testCtrlInst = new testController {}
+
+  fragment1 = testCtrlInst.render
+    'div':
+      '.parent':
+        '@text': '{{name()}}'
+        '@on click': 'clickMethod()'
+      '.child':
+        '@controller': childController
+        '@text': '{{childMethod()}} {{parentMethod()}}'
+        '@on click': 'clickMethod()'
+  equal fragment1[0].children[0].innerHTML, '<div class=\"parent\">parent</div><div class=\"child\">child parent calls child</div>', 'ok'
+
+  _test._trigger fragment1[0].children[0].children[0], 'click'
+  equal changed, 1, 'trigger parent'
+
+  _test._trigger fragment1[0].children[0].children[1], 'click'
+  equal changed, 3, 'trigger child'
