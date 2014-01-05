@@ -75,18 +75,16 @@ test 'CST @child ArrayScope', ->
 
 test 'CST @controller', ->
   testController = casua.defineController ->
-    test_methods =
-      name: ->
-        'parent'
-      parentMethod: ->
-        test_methods.name() + ' calls ' + @methods.childMethod()
+    name: ->
+      'parent'
+    parentMethod: ->
+      @$parent.name() + ' calls ' + @childMethod()
   childController = casua.defineController (scope) ->
     scope.set 'name', 'task' + scope.get('no')
-    child_methods =
-      name: ->
-        'child'
-      childMethod: ->
-        child_methods.name()
+    name: ->
+      'child'
+    childMethod: ->
+      @name()
   testCtrlInst = new testController
     lists: []
   lists = testCtrlInst.scope.get('lists')

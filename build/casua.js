@@ -679,17 +679,18 @@ Released under the MIT license
   })(casua.Scope);
 
   casua.defineController = function(init_fn) {
-    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __keep_original_attr_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, __nodeValueBind, __resolveMethod, _renderNode, _renderNodes;
-    _renderNode = function(_controller, _scope, _root, template) {
-      var child, m, new_controller, new_template, node, node_meta, r, ret_nodes;
+    var __computeBind, __compute_controller_method_regexp, __compute_controller_regexp, __compute_match_key_regexp, __compute_match_regexp, __compute_scope_key_regexp, __compute_scope_regexp, __keep_original_attr_regexp, __nodeAttrBind, __nodeBind, __nodeCondition, __nodeValueBind, __resolveMethod, _generateContext, _renderNode, _renderNodes;
+    _renderNode = function(_controller, _scope, _root, named_nodes, template) {
+      var child, m, method, new_controller, new_template, node, node_meta, r, ret_nodes, _context;
       if (_scope instanceof casua.ArrayScope) {
-        return _renderNodes(_controller, _scope, _root, template);
+        return _renderNodes(_controller, _scope, _root, named_nodes, template);
       } else if (template['@controller']) {
         new_template = _shallowCopy(template);
         new_controller = new template['@controller'](_scope, _controller);
         delete new_template['@controller'];
-        return _renderNode(new_controller, _scope, _root, new_template);
+        return _renderNode(new_controller, _scope, _root, named_nodes, new_template);
       } else {
+        _context = _generateContext(_controller, _root, named_nodes);
         ret_nodes = [];
         for (node_meta in template) {
           child = template[node_meta];
@@ -698,29 +699,32 @@ Released under the MIT license
               switch (r[1]) {
                 case 'on':
                   m = child.match(__compute_controller_method_regexp);
-                  _root.on(r[2], __resolveMethod(_controller, m[1]));
+                  method = __resolveMethod(_controller, m[1]);
+                  _root.on(r[2], function(e) {
+                    return method.call(_context, e);
+                  });
                   break;
                 case 'html':
                 case 'text':
-                  __nodeBind(_controller, _root, r[1], _scope, child);
+                  __nodeBind(_controller, _root, r[1], _scope, _context, child);
                   break;
                 case 'val':
-                  __nodeValueBind(_controller, _root, _scope, child);
+                  __nodeValueBind(_controller, _root, _scope, _context, child);
                   break;
                 case 'attr':
-                  __nodeAttrBind(_controller, _root, r[2], _scope, child);
+                  __nodeAttrBind(_controller, _root, r[2], _scope, _context, child);
                   break;
                 case 'class':
-                  __nodeAttrBind(_controller, _root, r[1], _scope, child);
+                  __nodeAttrBind(_controller, _root, r[1], _scope, _context, child);
                   break;
                 case 'child':
-                  _renderNode(_controller, _scope.get(r[2]), _root, child);
+                  _renderNode(_controller, _scope.get(r[2]), _root, named_nodes, child);
                   break;
                 case 'if':
-                  __nodeCondition(_controller, _root, r[1], _scope, child);
+                  __nodeCondition(_controller, _root, r[1], _scope, _context, child);
                   break;
                 case 'unless':
-                  __nodeCondition(_controller, _root, r[1], _scope, child, true);
+                  __nodeCondition(_controller, _root, r[1], _scope, _context, child, true);
               }
             }
           } else {
@@ -728,21 +732,23 @@ Released under the MIT license
             ret_nodes.push(node);
             _root.append(node);
             if (typeof child === 'object') {
-              _renderNode(_controller, _scope, node, child);
+              _renderNode(_controller, _scope, node, named_nodes, child);
             } else {
-              __nodeBind(_controller, node, 'text', _scope, child);
+              __nodeBind(_controller, node, 'text', _scope, _context, child);
             }
           }
         }
         return ret_nodes;
       }
     };
-    _renderNodes = function(_controller, _scope, _root, template) {
+    _renderNodes = function(_controller, _scope, _root, named_nodes, template) {
       var add_fn, _nodes;
       _root.empty();
       _nodes = [];
       add_fn = function(new_scope, type, idx) {
-        return _nodes[idx] = _renderNode(_controller, new_scope, _root, template);
+        var _new_named_nodes;
+        _new_named_nodes = _shallowCopy(named_nodes);
+        return _nodes[idx] = _renderNode(_controller, new_scope, _root, named_nodes, template);
       };
       _scope.$watch('$add', add_fn);
       _scope.$watch('$delete', function(new_scope, type, idx) {
@@ -783,16 +789,46 @@ Released under the MIT license
         return add_fn.call({}, one, null, idx);
       });
     };
-    __nodeBind = function(_controller, _node, _method, _scope, src) {
-      return __computeBind(_controller, _scope, src, function(result) {
+    _generateContext = function(_controller, _node, named_nodes) {
+      var $parent, context, fn, name, parent, _ref;
+      context = {
+        $node: function(name) {
+          if (name != null) {
+            if (name.charAt(0) === '$') {
+              return named_nodes[name];
+            } else {
+              return named_nodes.$root.find(name);
+            }
+          } else {
+            return _node;
+          }
+        }
+      };
+      parent = _controller;
+      $parent = context;
+      while (parent) {
+        _ref = parent.methods;
+        for (name in _ref) {
+          fn = _ref[name];
+          $parent[name] = fn;
+          context[name] || (context[name] = fn);
+        }
+        if (parent = parent._parent) {
+          $parent = $parent.$parent = {};
+        }
+      }
+      return context;
+    };
+    __nodeBind = function(_controller, _node, _method, _scope, _context, src) {
+      return __computeBind(_controller, _scope, _context, src, function(result) {
         return _node[_method].call(_node, result);
       });
     };
     __keep_original_attr_regexp = /^class$/;
-    __nodeAttrBind = function(_controller, _node, attr, _scope, src) {
+    __nodeAttrBind = function(_controller, _node, attr, _scope, _context, src) {
       var o, original, r, setter;
       original = attr.match(__keep_original_attr_regexp) && (o = _node.attr(attr)) ? o + ' ' : void 0;
-      __computeBind(_controller, _scope, src, function(result) {
+      __computeBind(_controller, _scope, _context, src, function(result) {
         if (original != null) {
           result = original + result;
         }
@@ -805,7 +841,7 @@ Released under the MIT license
         return _node.on('click', setter);
       }
     };
-    __nodeValueBind = function(_controller, _node, _scope, src) {
+    __nodeValueBind = function(_controller, _node, _scope, _context, src) {
       var getter, key, method, r, setter, _i, _len, _ref, _results;
       if (r = src.match(__compute_scope_key_regexp)) {
         getter = function() {
@@ -817,13 +853,13 @@ Released under the MIT license
       } else if (r = src.match(__compute_controller_method_regexp)) {
         method = __resolveMethod(_controller, r[1]);
         getter = function() {
-          return _node.val(method.call(_controller));
+          return _node.val(method.call(_context));
         };
         setter = function() {
-          return method.call(_controller, _node.val());
+          return method.call(_context, _node.val());
         };
       } else {
-        return __nodeBind(_controller, _root, 'val', _scope, child);
+        return __nodeBind(_controller, _root, 'val', _scope, _context, child);
       }
       _node.on('change', setter);
       _node.on('keyup', setter);
@@ -837,14 +873,14 @@ Released under the MIT license
       }
       return _results;
     };
-    __nodeCondition = function(_controller, _node, _method, _scope, src, _unless) {
+    __nodeCondition = function(_controller, _node, _method, _scope, _context, src, _unless) {
       var cur_node, false_node, true_node;
       if (_unless == null) {
         _unless = false;
       }
       cur_node = true_node = _node;
       false_node = new casua.Node('<!-- -->');
-      return __computeBind(_controller, _scope, src, (function(result) {
+      return __computeBind(_controller, _scope, _context, src, (function(result) {
         if (_unless) {
           result = !result;
         }
@@ -863,14 +899,14 @@ Released under the MIT license
     __compute_scope_key_regexp = /^@(\S+)$/;
     __compute_controller_regexp = /(\S+)\(\)/g;
     __compute_controller_method_regexp = /^(\S+)\(\)$/;
-    __computeBind = function(_controller, _scope, src, fn, to_eval) {
+    __computeBind = function(_controller, _scope, _context, src, fn, to_eval) {
       var key, keys_to_watch, method, r, watch_fn, _i, _len, _ref, _results;
       if (to_eval == null) {
         to_eval = false;
       }
       keys_to_watch = [];
       watch_fn = (r = src.match(__compute_controller_method_regexp)) ? (method = __resolveMethod(_controller, r[1]), function() {
-        return fn.call({}, method.call(_controller));
+        return fn.call({}, method.call(_context));
       }) : (r = src.match(__compute_scope_key_regexp)) ? function() {
         return fn.call({}, this.get(r[1]));
       } : (r = src.match(__compute_match_regexp)) ? function() {
@@ -880,7 +916,7 @@ Released under the MIT license
           part = part.match(__compute_match_key_regexp);
           if (r = part[1].match(__compute_controller_method_regexp)) {
             method = __resolveMethod(_controller, r[1]);
-            return method.call(_controller);
+            return method.call(_context);
           } else if (r = part[1].match(__compute_scope_key_regexp)) {
             return scope.get(r[1]);
           }
@@ -888,7 +924,7 @@ Released under the MIT license
       } : to_eval ? (src = src.replace(__compute_controller_regexp, function(part) {
         part = part.match(__compute_controller_method_regexp);
         method = __resolveMethod(_controller, part[1]);
-        return 'method.call(_controller)';
+        return 'method.call(_context)';
       }), src = src.replace(__compute_scope_regexp, function(part) {
         part = part.match(__compute_scope_key_regexp);
         return '_scope.get("' + part[1] + '")';
@@ -930,13 +966,18 @@ Released under the MIT license
       }
 
       _Class.prototype.renderAt = function(container, template) {
-        return _renderNode(this, this.scope, (new casua.Node(container)).empty(), template);
+        var named_nodes;
+        container = (new casua.Node(container)).empty();
+        named_nodes = {
+          $root: container
+        };
+        return _renderNode(this, this.scope, container, named_nodes, template);
       };
 
       _Class.prototype.render = function(template) {
         var fragment;
         fragment = new casua.Node(document.createElement('div'));
-        _renderNode(this, this.scope, fragment, template);
+        this.renderAt(fragment, template);
         return fragment;
       };
 

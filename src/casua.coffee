@@ -374,15 +374,16 @@ class casua.ArrayScope extends casua.Scope
 
 casua.defineController = (init_fn) ->
 
-  _renderNode = (_controller, _scope, _root, template) ->
+  _renderNode = (_controller, _scope, _root, named_nodes, template) ->
     if _scope instanceof casua.ArrayScope
-      _renderNodes _controller, _scope, _root, template
+      _renderNodes _controller, _scope, _root, named_nodes, template
     else if template['@controller']
       new_template = _shallowCopy template
       new_controller = new template['@controller'](_scope, _controller)
       delete new_template['@controller']
-      _renderNode new_controller, _scope, _root, new_template
+      _renderNode new_controller, _scope, _root, named_nodes, new_template
     else
+      _context = _generateContext _controller, _root, named_nodes
       ret_nodes = []
       for node_meta, child of template
         if node_meta.charAt(0) == '@'
@@ -390,36 +391,38 @@ casua.defineController = (init_fn) ->
             switch r[1]
               when 'on'
                 m = child.match __compute_controller_method_regexp
-                _root.on r[2], __resolveMethod(_controller, m[1])
+                method = __resolveMethod(_controller, m[1])
+                _root.on r[2], (e) -> method.call _context, e
               when 'html', 'text'
-                __nodeBind _controller, _root, r[1], _scope, child
+                __nodeBind _controller, _root, r[1], _scope, _context, child
               when 'val'
-                __nodeValueBind _controller, _root, _scope, child
+                __nodeValueBind _controller, _root, _scope, _context, child
               when 'attr'
-                __nodeAttrBind _controller, _root, r[2], _scope, child
+                __nodeAttrBind _controller, _root, r[2], _scope, _context, child
               when 'class'
-                __nodeAttrBind _controller, _root, r[1], _scope, child
+                __nodeAttrBind _controller, _root, r[1], _scope, _context, child
               when 'child'
-                _renderNode _controller, _scope.get(r[2]), _root, child
+                _renderNode _controller, _scope.get(r[2]), _root, named_nodes, child
               when 'if'
-                __nodeCondition _controller, _root, r[1], _scope, child
+                __nodeCondition _controller, _root, r[1], _scope, _context, child
               when 'unless'
-                __nodeCondition _controller, _root, r[1], _scope, child, true
+                __nodeCondition _controller, _root, r[1], _scope, _context, child, true
         else
           node = new casua.Node node_meta
           ret_nodes.push node
           _root.append node
           if typeof child is 'object'
-            _renderNode _controller, _scope, node, child
+            _renderNode _controller, _scope, node, named_nodes, child
           else
-            __nodeBind _controller, node, 'text', _scope, child
+            __nodeBind _controller, node, 'text', _scope, _context, child
       ret_nodes    
 
-  _renderNodes = (_controller, _scope, _root, template) ->
+  _renderNodes = (_controller, _scope, _root, named_nodes, template) ->
     _root.empty()
     _nodes = []
     add_fn = (new_scope, type, idx) ->
-      _nodes[idx] = _renderNode _controller, new_scope, _root, template
+      _new_named_nodes = _shallowCopy named_nodes
+      _nodes[idx] = _renderNode _controller, new_scope, _root, named_nodes, template
     _scope.$watch '$add', add_fn
     _scope.$watch '$delete', (new_scope, type, idx) ->
       nodes = _nodes.splice(idx, 1)[0]
@@ -433,15 +436,35 @@ casua.defineController = (init_fn) ->
         _root.append node for node in nodes
     _scope.each (one, idx) -> add_fn.call {}, one, null, idx
 
-  __nodeBind = (_controller, _node, _method, _scope, src) ->
-    __computeBind _controller, _scope, src, (result) ->
+  _generateContext = (_controller, _node, named_nodes) ->
+    context =
+      $node: (name) ->
+        if name?
+          if name.charAt(0) == '$'
+            named_nodes[name]
+          else
+            named_nodes.$root.find name
+        else
+          _node
+    parent = _controller
+    $parent = context
+    while parent
+      for name, fn of parent.methods
+        $parent[name] = fn
+        context[name] ||= fn
+      if parent = parent._parent
+        $parent = $parent.$parent = {}
+    context
+
+  __nodeBind = (_controller, _node, _method, _scope, _context, src) ->
+    __computeBind _controller, _scope, _context, src, (result) ->
       _node[_method].call _node, result
 
   __keep_original_attr_regexp = /^class$/
-  __nodeAttrBind = (_controller, _node, attr, _scope, src) ->
+  __nodeAttrBind = (_controller, _node, attr, _scope, _context, src) ->
     original = if attr.match(__keep_original_attr_regexp) && o = _node.attr(attr)
       o + ' '
-    __computeBind _controller, _scope, src, (result) ->
+    __computeBind _controller, _scope, _context, src, (result) ->
       result = original + result if original?
       _node.attr attr, result
     if attr.match(__boolean_attr_regexp) && r = src.match(__compute_scope_key_regexp)
@@ -449,26 +472,26 @@ casua.defineController = (init_fn) ->
         _scope.set r[1], _node.attr(attr)
       _node.on 'click', setter
 
-  __nodeValueBind = (_controller, _node, _scope, src) ->
+  __nodeValueBind = (_controller, _node, _scope, _context, src) ->
     if r = src.match __compute_scope_key_regexp
       getter = -> _node.val _scope.get(r[1])
       setter = -> _scope.set r[1], _node.val()
     else if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
-      getter = -> _node.val method.call(_controller)
-      setter = -> method.call _controller, _node.val()
+      getter = -> _node.val method.call(_context)
+      setter = -> method.call _context, _node.val()
     else
-      return __nodeBind _controller, _root, 'val', _scope, child
+      return __nodeBind _controller, _root, 'val', _scope, _context, child
     _node.on 'change', setter
     _node.on 'keyup', setter
     _scope.$startGetWatches()
     getter.call _scope
     _scope.$watch key, getter for key in _scope.$stopGetWatches()
 
-  __nodeCondition = (_controller, _node, _method, _scope, src, _unless = false) ->
+  __nodeCondition = (_controller, _node, _method, _scope, _context, src, _unless = false) ->
     cur_node = true_node = _node
     false_node = new casua.Node '<!-- -->'
-    __computeBind _controller, _scope, src, ( (result) ->
+    __computeBind _controller, _scope, _context, src, ( (result) ->
       result = !result if _unless
       if result
         cur_node.replaceWith true_node
@@ -487,11 +510,11 @@ casua.defineController = (init_fn) ->
   __compute_controller_regexp = /(\S+)\(\)/g
   __compute_controller_method_regexp = /^(\S+)\(\)$/
 
-  __computeBind = (_controller, _scope, src, fn, to_eval = false) ->
+  __computeBind = (_controller, _scope, _context, src, fn, to_eval = false) ->
     keys_to_watch = []
     watch_fn = if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
-      -> fn.call {}, method.call(_controller)
+      -> fn.call {}, method.call(_context)
     else if r = src.match __compute_scope_key_regexp
       -> fn.call {}, @get(r[1])
     else if r = src.match __compute_match_regexp
@@ -501,14 +524,14 @@ casua.defineController = (init_fn) ->
           part = part.match __compute_match_key_regexp
           if r = part[1].match __compute_controller_method_regexp
             method = __resolveMethod _controller, r[1]
-            method.call(_controller)
+            method.call _context
           else if r = part[1].match __compute_scope_key_regexp
             scope.get(r[1])
     else if to_eval
       src = src.replace __compute_controller_regexp, (part) ->
         part = part.match __compute_controller_method_regexp
         method = __resolveMethod _controller, part[1]
-        'method.call(_controller)'
+        'method.call(_context)'
       src = src.replace __compute_scope_regexp, (part) ->
         part = part.match __compute_scope_key_regexp
         '_scope.get("' + part[1] + '")'
@@ -536,11 +559,14 @@ casua.defineController = (init_fn) ->
       @methods = init_fn.call @, @scope, @
 
     renderAt: (container, template) ->
-      _renderNode @, @scope, (new casua.Node container).empty(), template
+      container = (new casua.Node container).empty()
+      named_nodes =
+        $root: container
+      _renderNode @, @scope, container, named_nodes, template
 
     render: (template) ->
       fragment = new casua.Node document.createElement 'div'
-      _renderNode @, @scope, fragment, template
+      @renderAt fragment, template
       fragment
 
 window.casua = casua

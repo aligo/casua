@@ -34,10 +34,8 @@
         return tasks_scope.remove(tasks_scope.indexOf(scope));
       },
       startEdit: function() {
-        var li;
-        li = this._node.parent().parent();
         scope.set('editing', true);
-        return li.find('input.name').trigger('focus');
+        return this.$node('input.name').trigger('focus');
       },
       saveChange: function(e) {
         var keyCode;
