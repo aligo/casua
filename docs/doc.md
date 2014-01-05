@@ -151,10 +151,13 @@ When scope changes, watch handlers attached to the changed property will be invo
 
 In addition casua.Scope also supports two special handlers:
 
+```
 scope.$watch('$add', handler)
 scope.$watch('$delete', handler)
+```
 
-they will fired when adding new property to scope or deleting property from scope.
+They will fired when adding new property to scope or deleting property from scope.
+
 Three parameters passed will become:
 `(val, key, '$add')` and `(val, key, '$delete')`
 
