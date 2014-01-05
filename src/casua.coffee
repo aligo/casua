@@ -111,6 +111,7 @@ class casua.Node
           _forEach @, -> 
             @removeAttribute name
             @[name] = false
+        @
       else
         @[0][name]
     else

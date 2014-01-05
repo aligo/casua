@@ -179,16 +179,17 @@ Released under the MIT license
       if (name.match(__boolean_attr_regexp)) {
         if (value != null) {
           if (value) {
-            return _forEach(this, function() {
+            _forEach(this, function() {
               this.setAttribute(name, name);
               return this[name] = true;
             });
           } else {
-            return _forEach(this, function() {
+            _forEach(this, function() {
               this.removeAttribute(name);
               return this[name] = false;
             });
           }
+          return this;
         } else {
           return this[0][name];
         }
