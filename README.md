@@ -4,7 +4,7 @@ A casual and neat Structured Template and MVVM engine.
 
 
 ### Version
-Ongoing
+0.0.1
 
 ----
 #### Author

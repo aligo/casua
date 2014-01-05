@@ -1,5 +1,5 @@
 ###
-Casua
+Casua 0.0.1
 Copyright (c) 2013-2014 aligo Kang
 
 Released under the MIT license
@@ -43,10 +43,6 @@ class casua.Node
     (element, type, fn) -> element.addEventListener type, fn, false
   else
     (element, type, fn) -> element.attachEvent 'on' + type, fn
-  # __removeEventListenerFn = if window.document.removeEventListener
-  #   (element, type, fn) -> element.removeEventListener type, fn, false
-  # else
-  #   (element, type, fn) -> element.detachEvent 'on' + type, fn
 
   __createEventHanlder = (element, events) ->
     ret = (event, type) ->
