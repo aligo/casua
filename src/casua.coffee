@@ -264,6 +264,7 @@ class casua.Scope
           unless old?
             _scopeCallWatch @, value, key, '$add'
           _scopeCallWatch @, value, old, key
+    @
 
   remove: (key) ->
     if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
@@ -271,6 +272,7 @@ class casua.Scope
     else
       _scopeRemovePrepare @, key
       delete @_data[key]
+    @
 
   $watch: (key, fn) ->
     if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
@@ -278,6 +280,7 @@ class casua.Scope
     else
       @_watches[key] ||= []
       @_watches[key].push fn
+    @
 
   $startGetWatches: ->
     @_watch_lists = []

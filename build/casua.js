@@ -445,7 +445,7 @@ Released under the MIT license
     Scope.prototype.set = function(key, value) {
       var old, r;
       if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
-        return this.get(r[1]).set(r[2], value);
+        this.get(r[1]).set(r[2], value);
       } else {
         if (!(typeof key === 'string' && key.charAt(0) === '$')) {
           if (typeof value === 'object') {
@@ -457,30 +457,33 @@ Released under the MIT license
             if (old == null) {
               _scopeCallWatch(this, value, key, '$add');
             }
-            return _scopeCallWatch(this, value, old, key);
+            _scopeCallWatch(this, value, old, key);
           }
         }
       }
+      return this;
     };
 
     Scope.prototype.remove = function(key) {
       var r;
       if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
-        return this.get(r[1]).remove(r[2]);
+        this.get(r[1]).remove(r[2]);
       } else {
         _scopeRemovePrepare(this, key);
-        return delete this._data[key];
+        delete this._data[key];
       }
+      return this;
     };
 
     Scope.prototype.$watch = function(key, fn) {
       var r, _base;
       if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
-        return this.get(r[1]).$watch(r[2], fn);
+        this.get(r[1]).$watch(r[2], fn);
       } else {
         (_base = this._watches)[key] || (_base[key] = []);
-        return this._watches[key].push(fn);
+        this._watches[key].push(fn);
       }
+      return this;
     };
 
     Scope.prototype.$startGetWatches = function() {
