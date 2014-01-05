@@ -144,11 +144,15 @@ test 'CST @if', ->
 
 test 'Controller Context', ->
   changed = 0
+  root_html = ''
+  trigger_html = ''
   testController = casua.defineController ->
     add: -> 1
     name: -> 'parent'
     parentMethod: -> @$parent.name() + ' calls ' + @childMethod()
     clickMethod: ->
+      root_html = @$node('$root').html()
+      trigger_html = @$node().html()
       changed += @add()
   childController = casua.defineController (scope) ->
     scope.set 'name', 'task' + scope.get('no')
@@ -171,6 +175,9 @@ test 'Controller Context', ->
 
   _test._trigger fragment1[0].children[0].children[0], 'click'
   equal changed, 1, 'trigger parent'
+  equal root_html, '<div><div class=\"parent\">parent</div><div class=\"child\">child parent calls child</div></div>', 'named node $root'
+  equal trigger_html, 'parent', 'trigger_html'
 
   _test._trigger fragment1[0].children[0].children[1], 'click'
   equal changed, 3, 'trigger child'
+  equal trigger_html, 'child parent calls child', 'trigger_html'
