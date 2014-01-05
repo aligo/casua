@@ -17,7 +17,7 @@ TaskCtrl = casua.defineController (scope) ->
     tasks_scope.remove tasks_scope.indexOf(scope)
   startEdit: ->
     scope.set 'editing', true
-    @$node('input.name').trigger 'focus'
+    @$node('$name').trigger 'focus'
   saveChange: (e) ->
     keyCode = e.keyCode || e.which
     scope.set 'editing', false if keyCode == 13
@@ -40,7 +40,7 @@ template =
           'a':
             '@text': 'x'
             '@on click': 'removeTask()'
-        'input.name type="text"':
+        'input type="text" $name':
           '@if': '@editing'
           '@val': '@name'
           '@on keyup': 'saveChange()'

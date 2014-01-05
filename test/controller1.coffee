@@ -160,7 +160,7 @@ test 'Controller Context', ->
     name: -> 'child'
     childMethod: -> @name()
 
-  testCtrlInst = new testController {}
+  testCtrlInst = new testController
 
   fragment1 = testCtrlInst.render
     'div':
@@ -181,3 +181,46 @@ test 'Controller Context', ->
   _test._trigger fragment1[0].children[0].children[1], 'click'
   equal changed, 3, 'trigger child'
   equal trigger_html, 'child parent calls child', 'trigger_html'
+
+test 'Named Node', ->
+  named_div = false
+  named_a = false
+  testController = casua.defineController ->
+    getNamedNode: ->
+      named_div = @$node('$div')
+      named_a = @$node('$a')
+  testCtrlInst = new testController
+    arr: [
+      { name: '1' }
+      { name: '2' }
+      { name: '3' }
+    ]
+  fragment1 = testCtrlInst.render
+    'div $div':
+      'a $a':
+        '@on click': 'getNamedNode()'
+        '@text': 'test'
+  _test._trigger fragment1[0].children[0].children[0], 'click'
+  equal named_div.html(), '<a>test</a>', 'get named div'
+  equal named_a.html(), 'test', 'get named a'
+
+  fragment2 = testCtrlInst.render
+    'div $div':
+      'a $a':
+        '@on click': 'getNamedNode()'
+        '@text': 'test'
+    'ul':
+      '@child arr':
+        'li $div':
+          '@on click': 'getNamedNode()'
+          '@text': '@name'
+
+  equal fragment2.html(), '<div><a>test</a></div><ul><li>1</li><li>2</li><li>3</li></ul>', 'ok'
+  _test._trigger fragment2[0].children[0].children[0], 'click'
+  equal named_div.html(), '<a>test</a>', 'get named div'
+  equal named_a.html(), 'test', 'get named a'
+
+  _test._trigger fragment2[0].children[1].children[1], 'click'
+
+  equal named_div.html(), '2', 'get named div'
+  equal named_a.html(), 'test', 'get named a'

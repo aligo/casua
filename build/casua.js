@@ -729,7 +729,11 @@ Released under the MIT license
               }
             }
           } else {
-            node = new casua.Node(node_meta);
+            r = node_meta.match(/^(.*?)(?: \$(\S+))?(?: \#.*)?$/);
+            node = new casua.Node(r[1]);
+            if (r[2]) {
+              named_nodes['$' + r[2]] = node;
+            }
             ret_nodes.push(node);
             _root.append(node);
             if (typeof child === 'object') {
@@ -749,7 +753,7 @@ Released under the MIT license
       add_fn = function(new_scope, type, idx) {
         var _new_named_nodes;
         _new_named_nodes = _shallowCopy(named_nodes);
-        return _nodes[idx] = _renderNode(_controller, new_scope, _root, named_nodes, template);
+        return _nodes[idx] = _renderNode(_controller, new_scope, _root, _new_named_nodes, template);
       };
       _scope.$watch('$add', add_fn);
       _scope.$watch('$delete', function(new_scope, type, idx) {
@@ -962,6 +966,9 @@ Released under the MIT license
     };
     return (function() {
       function _Class(init_data, _parent) {
+        if (init_data == null) {
+          init_data = {};
+        }
         this._parent = _parent;
         this.scope = new casua.Scope(init_data);
         this.methods = init_fn.call(this, this.scope, this);

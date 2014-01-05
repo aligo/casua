@@ -408,7 +408,9 @@ casua.defineController = (init_fn) ->
               when 'unless'
                 __nodeCondition _controller, _root, r[1], _scope, _context, child, true
         else
-          node = new casua.Node node_meta
+          r = node_meta.match /^(.*?)(?: \$(\S+))?(?: \#.*)?$/
+          node = new casua.Node r[1]
+          named_nodes['$' + r[2]] = node if r[2]
           ret_nodes.push node
           _root.append node
           if typeof child is 'object'
@@ -422,7 +424,7 @@ casua.defineController = (init_fn) ->
     _nodes = []
     add_fn = (new_scope, type, idx) ->
       _new_named_nodes = _shallowCopy named_nodes
-      _nodes[idx] = _renderNode _controller, new_scope, _root, named_nodes, template
+      _nodes[idx] = _renderNode _controller, new_scope, _root, _new_named_nodes, template
     _scope.$watch '$add', add_fn
     _scope.$watch '$delete', (new_scope, type, idx) ->
       nodes = _nodes.splice(idx, 1)[0]
@@ -554,7 +556,7 @@ casua.defineController = (init_fn) ->
     resolved_method
 
   class
-    constructor: (init_data, @_parent) ->
+    constructor: (init_data = {}, @_parent) ->
       @scope = new casua.Scope init_data
       @methods = init_fn.call @, @scope, @
 

@@ -35,7 +35,7 @@
       },
       startEdit: function() {
         scope.set('editing', true);
-        return this.$node('input.name').trigger('focus');
+        return this.$node('$name').trigger('focus');
       },
       saveChange: function(e) {
         var keyCode;
@@ -69,7 +69,7 @@
               '@on click': 'removeTask()'
             }
           },
-          'input.name type="text"': {
+          'input type="text" $name': {
             '@if': '@editing',
             '@val': '@name',
             '@on keyup': 'saveChange()'
