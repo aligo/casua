@@ -143,3 +143,18 @@ scope.get('$parent.job.company') # => 'cool'
  - Returns `scope` itself
 
 ### Watch Handlers
+When scope changes, watch handlers attached to the changed property will be invoked, with passed three parameters:
+`( new_val, old_val, key )`
+ - `new_val` the new value after change
+ - `old_val` the old value before change
+ - `key` the changed property key
+
+In addition casua.Scope also supports two special handlers:
+
+scope.$watch('$add', handler)
+scope.$watch('$delete', handler)
+
+they will fired when adding new property to scope or deleting property from scope.
+Three parameters passed will become:
+`(val, key, '$add')` and `(val, key, '$delete')`
+
