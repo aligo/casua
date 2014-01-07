@@ -770,7 +770,7 @@ Released under the MIT license
         }
         return _results;
       });
-      _scope.$watch('$move', function(new_pos, type) {
+      _scope.$watch('$move', function(new_pos) {
         var new_po, node, nodes, old_po, _i, _j, _len, _len1, _new_nodes, _results;
         _new_nodes = [];
         for (old_po = _i = 0, _len = new_pos.length; _i < _len; old_po = ++_i) {
@@ -907,10 +907,10 @@ Released under the MIT license
     __compute_match_key_regexp = /^\{\{([\S^\}]+?)\}\}$/;
     __compute_scope_regexp = /@(\S+)/g;
     __compute_scope_key_regexp = /^@(\S+)$/;
-    __compute_controller_regexp = /(\S+)\(\)/g;
-    __compute_controller_method_regexp = /^(\S+)\(\)$/;
+    __compute_controller_regexp = /(\w\S*)\(\)/g;
+    __compute_controller_method_regexp = /^(\w\S*)\(\)$/;
     __computeBind = function(_controller, _scope, _context, src, fn, to_eval) {
-      var key, keys_to_watch, method, r, watch_fn, _i, _len, _ref, _results;
+      var ct, key, keys_to_watch, method, mm, r, sc, watch_fn, _i, _len, _ref, _results;
       if (to_eval == null) {
         to_eval = false;
       }
@@ -931,13 +931,13 @@ Released under the MIT license
             return scope.get(r[1]);
           }
         }));
-      } : to_eval ? (src = src.replace(__compute_controller_regexp, function(part) {
+      } : to_eval ? (ct = _context, sc = _scope, mm = {}, src = src.replace(__compute_controller_regexp, function(part) {
         part = part.match(__compute_controller_method_regexp);
-        method = __resolveMethod(_controller, part[1]);
-        return 'method.call(_context)';
+        mm[part[1]] = __resolveMethod(_controller, part[1]);
+        return 'mm["' + part[1] + '"].call(ct)';
       }), src = src.replace(__compute_scope_regexp, function(part) {
         part = part.match(__compute_scope_key_regexp);
-        return '_scope.get("' + part[1] + '")';
+        return 'sc.get("' + part[1] + '")';
       }), function() {
         return fn.call({}, eval(src));
       }) : function() {

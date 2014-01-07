@@ -429,7 +429,7 @@ casua.defineController = (init_fn) ->
     _scope.$watch '$delete', (new_scope, type, idx) ->
       nodes = _nodes.splice(idx, 1)[0]
       node.remove() for node in nodes
-    _scope.$watch '$move', (new_pos, type) ->
+    _scope.$watch '$move', (new_pos) ->
       _new_nodes = []
       _new_nodes[new_po] = _nodes[old_po] for new_po, old_po in new_pos
       _nodes = _new_nodes
@@ -509,8 +509,8 @@ casua.defineController = (init_fn) ->
   __compute_scope_regexp = /@(\S+)/g
   __compute_scope_key_regexp = /^@(\S+)$/
 
-  __compute_controller_regexp = /(\S+)\(\)/g
-  __compute_controller_method_regexp = /^(\S+)\(\)$/
+  __compute_controller_regexp = /(\w\S*)\(\)/g
+  __compute_controller_method_regexp = /^(\w\S*)\(\)$/
 
   __computeBind = (_controller, _scope, _context, src, fn, to_eval = false) ->
     keys_to_watch = []
@@ -530,13 +530,16 @@ casua.defineController = (init_fn) ->
           else if r = part[1].match __compute_scope_key_regexp
             scope.get(r[1])
     else if to_eval
+      ct = _context
+      sc = _scope
+      mm = {}
       src = src.replace __compute_controller_regexp, (part) ->
         part = part.match __compute_controller_method_regexp
-        method = __resolveMethod _controller, part[1]
-        'method.call(_context)'
+        mm[part[1]] = __resolveMethod _controller, part[1]
+        'mm["' + part[1] + '"].call(ct)'
       src = src.replace __compute_scope_regexp, (part) ->
         part = part.match __compute_scope_key_regexp
-        '_scope.get("' + part[1] + '")'
+        'sc.get("' + part[1] + '")'
       -> fn.call {}, eval(src)
     else
       -> fn.call {}, src

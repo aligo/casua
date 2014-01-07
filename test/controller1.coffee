@@ -112,6 +112,7 @@ test 'CST @controller', ->
 test 'CST @if', ->
   testController = casua.defineController (scope) ->
     getBool2: -> scope.get('bool2')
+    getBool3: -> false
   testCtrlInst = new testController
     bool1: true
     bool2: false
@@ -137,7 +138,7 @@ test 'CST @if', ->
         '@if': '@bool1 && true'
         '@text': 'bool1 is true'
       'span #2':
-        '@if': 'getBool2() && true'
+        '@if': 'getBool2() && !getBool3() && true'
         '@text': 'bool2 is true'
 
   equal fragment2[0].children[0].innerHTML, '<!-- --><span>bool2 is true</span>', 'ok'

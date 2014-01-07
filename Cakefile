@@ -55,4 +55,4 @@ compile = (watch, callback) ->
   launch 'coffee', options.concat(casua_files), callback
 
 build = (callback) ->
-  exec 'uglifyjs build/casua.js -o build/casua.min.js -c -m', [], callback
+  exec 'uglifyjs build/casua.js -o build/casua.min.js -c --mangle toplevel,eval -r "ct,sc,mm"', [], callback
