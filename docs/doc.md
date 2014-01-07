@@ -161,3 +161,4 @@ They will fired when adding new property to scope or deleting property from scop
 Three parameters passed will become:
 `(val, key, '$add')` and `(val, key, '$delete')`
 
+## casua.ArrayScope
