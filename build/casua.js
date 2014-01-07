@@ -903,8 +903,8 @@ Released under the MIT license
         }
       }), true);
     };
-    __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g;
-    __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/;
+    __compute_match_regexp = /\{\{([\S^\}]+?)\}\}/g;
+    __compute_match_key_regexp = /^\{\{([\S^\}]+?)\}\}$/;
     __compute_scope_regexp = /@(\S+)/g;
     __compute_scope_key_regexp = /^@(\S+)$/;
     __compute_controller_regexp = /(\S+)\(\)/g;

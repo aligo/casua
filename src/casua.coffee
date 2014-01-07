@@ -503,8 +503,8 @@ casua.defineController = (init_fn) ->
         cur_node = false_node
     ), true
 
-  __compute_match_regexp = /\{\{([\S^\}]+)\}\}/g
-  __compute_match_key_regexp = /^\{\{([\S^\}]+)\}\}$/
+  __compute_match_regexp = /\{\{([\S^\}]+?)\}\}/g
+  __compute_match_key_regexp = /^\{\{([\S^\}]+?)\}\}$/
 
   __compute_scope_regexp = /@(\S+)/g
   __compute_scope_key_regexp = /^@(\S+)$/
