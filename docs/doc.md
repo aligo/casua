@@ -105,6 +105,8 @@ casua.Scope basically like a js object, has properties that is used to contain d
  - `key` *[ String ]*
  - Returns *[ Any / casua.Scope ]*
 
+Using `$parent` in key, can resolve to parent of current scope (if exist).
+
 examples:
 ```coffeescript
 scope = new casua.Scope {
@@ -213,4 +215,16 @@ ArrayScope also provides following methods:
  - `fn` *[ Function ]* called it with two arguments: `(element, index)`, and context `this` is the ArrayScope itself.
  - Returns `scope` itself
 
- 
+### Watch Handlers
+In addition to normal Scope watches and `$add`, `$delete`, ArrayScope also provides `$move` watch, used to track the position changes of element of array.
+
+```
+scope.$watch('$move', handler)
+```
+When the changes happended, handler will be invoked with passed three parameters:
+
+```
+(pos, null, '$move')
+```
+ - pos *[ Array ]* its index refers to the original position of element, and its value refers to new position, such as `[ 2, 1, 0 ]`, means that array has been reversed, first element is moved to position 2, which is last, and second still in position 1, and last gone to the 0, became first.
+
