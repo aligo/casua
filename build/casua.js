@@ -554,14 +554,13 @@ Released under the MIT license
     };
 
     ArrayScope.prototype.each = function(fn) {
-      var i, one, _i, _len, _ref, _results;
+      var i, one, _i, _len, _ref;
       _ref = this._data;
-      _results = [];
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         one = _ref[i];
-        _results.push(fn.call(this, this.get(i), i));
+        fn.call(this, this.get(i), i);
       }
-      return _results;
+      return this;
     };
 
     ArrayScope.prototype.pop = function() {
@@ -665,7 +664,7 @@ Released under the MIT license
       _ref = this._data;
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         one = _ref[i];
-        if (!fn.call(this, one)) {
+        if (!fn.call(this, one, i)) {
           to_remove.push(i);
         }
       }

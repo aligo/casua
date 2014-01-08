@@ -323,6 +323,7 @@ class casua.ArrayScope extends casua.Scope
   each: (fn) ->
     for one, i in @_data
       fn.call @, @get(i), i
+    @
 
   pop: -> @remove(@_data.length - 1)[0]
 
@@ -369,7 +370,7 @@ class casua.ArrayScope extends casua.Scope
   filter: (fn) ->
     to_remove = []
     for one, i in @_data
-      to_remove.push i unless fn.call @, one
+      to_remove.push i unless fn.call @, one, i
     @remove i for i in to_remove.reverse()
 
 casua.defineController = (init_fn) ->

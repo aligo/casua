@@ -162,3 +162,55 @@ Three parameters passed will become:
 `(val, key, '$add')` and `(val, key, '$delete')`
 
 ## casua.ArrayScope
+ArrayScope is a special scope wrapped Array. It also have get() set() remove() and watch(), which exist and can be used like in Scope.
+
+ArrayScope also provides following methods:
+
+### length
+`scope.length()` get the length of array
+ - Returns *[ Integer ]*
+
+### each
+`scope.each(fn)` iterates over array
+ - `fn` *[ Function ]* Each invocation of iterator is called it with two arguments: `(element, index)`, and context `this` is the ArrayScope itself.
+ - `handler` *[ Function ]*
+ - Returns `scope` itself
+
+### indexOf
+`scope.indexOf(element)`
+ - `element` *[ Any / casua.Scope ]*
+ - Returns *[ Integer ]* position of element in array, if element not exist, returns -1
+
+### pop
+`scope.pop()` removes last element of array, returns that element
+ - Returns *[ Any / casua.Scope ]*
+
+### push
+`scope.push(element1, element2, ..., elementX)`
+ - `element` *[ Any / casua.Scope ]* adds new items to the end of an array, returns new length.
+ - Returns *[ Integer ]*
+
+### reverse
+`scope.reverse()` reverses the order of the elements in array
+ - Returns `scope` itself
+
+### shift
+`scope.shift()` removes first element of array, returns that element
+ - Returns *[ Any / casua.Scope ]*
+
+### sort
+`scope.sort(fn)`
+ - `fn` *[ Function ]* called with arguments: `(a, b)`, and `a` and `b` will be sorted ascending or descending, based on numbers `fn` return.
+ - Returns *[ Any / casua.Scope ]*
+
+### unshift
+`scope.unshift(element1, element2, ..., elementX)`
+ - `element` *[ Any / casua.Scope ]* adds new items to the beginning of an array, returns new length.
+ - Returns *[ Integer ]*
+
+### filter
+`scope.filter(fn)` looks through each element in array, keep only elements that pass a truth test (`fn` return).
+ - `fn` *[ Function ]* called it with two arguments: `(element, index)`, and context `this` is the ArrayScope itself.
+ - Returns `scope` itself
+
+ 
