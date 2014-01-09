@@ -79,6 +79,12 @@ Remove all child nodes
 `node.text(text)` set the text content
  - `text` *[ String ]* the text to set
  - Returns `node` itself
+ 
+### trigger
+`node.trigger(type, event_data)` execute all handlers with given event type
+ - `type` *[ String ]* event type, such as "click", "dblclick", "focus"
+ - `event_data` *[ Object ]* additonal parameters to pass along to the event handler, such as `{'custom':'value'}`
+ - Returns `node` itself
 
 ### val
 `node.val()` get the value
