@@ -335,5 +335,29 @@ template =
     '@text': 'this {{@was_or_not}} clicked'
 
 new exampleController().renderAt app_node, template
+```
+
+---
+
+CST (Casua Structured Template)
+
+The CST in casua, inspired by haml and jade, is a clear and beautiful markup, to simply describe the structure of html, and the data bindings to html element. 
+
+The CST can be setup as a javascript object, but it only looks good, clear and well-indented in coffeescript. Maybe later casua should provide a parser, for converting plain-text template (more clear, no quotes and colons) or even html to this kind of CST object. But for now, let's use coffee. A CST in coffee looks like this:
 
 ```
+'#div-id.div-class':
+  'a href="http://www.xxx.com/"': 'link text'
+  'h1':
+    '@on click': 'clickTitle()'
+    '@text': '@title'
+    '@attr class': '@titleClass()'
+  'ul':
+    '@child lists':
+      '@controller': ItemController
+      'li class="item"':
+        '@html': 'htmlContent()'
+```
+
+
+
