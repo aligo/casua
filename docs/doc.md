@@ -228,3 +228,46 @@ When the changes happended, handler will be invoked with passed three parameters
 ```
  - pos *[ Array ]* its index refers to the original position of element, and its value refers to new position, such as `[ 2, 1, 0 ]`, means that array has been reversed, first element is moved to position 2, which is last, and second still in position 1, and last gone to the 0, became first.
 
+
+---
+
+## Controller
+
+The controller in casua, are behind the DOM elements, used to response the user interaction and update the result to the view. Todo that, a controller should have some methods, which can binded as event handler of DOM element, or as computed value to html, attrbutes or condition of DOM el ement.
+
+### To define a controller
+
+```javascript
+controllerPrototype = casua.defineController( function (scope) {
+  /* Constructor 
+   * This constructor function will be called when everytime the controller be instantiated.
+   * Over here, You can initialize data to scope, such as loading data from backend api.
+   */
+  scope.set('amount', 10);
+  return {
+    /* Returns Methods
+     * Everytime controller is invoked, should return a object, which contained some methods like following, to bind with view.
+     */
+    computedAmount: function () {
+      // Return a computed value
+      return scope.get('amount') + 100;
+    },
+    onClickClearAmount: function (event) {
+      // Binded as a onclick event handler, argument event passed in is a DOM Event.
+      scope.set('amount', 0);
+    }
+  };
+} );
+
+```
+
+In fact, casua is designed to be used together with coffeescript, the code above in coffeescript will be more simple and clear, like:
+
+```coffeescript
+controllerPrototype = casua.defineController (scope) ->
+  scope.set('amount', 10)
+
+  computedAmount: -> scope.get('amount') + 100 
+  onClickClearAmount: (e) -> scope.set('amount', 0)
+
+```
