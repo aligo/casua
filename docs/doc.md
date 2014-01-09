@@ -271,3 +271,26 @@ controllerPrototype = casua.defineController (scope) ->
   onClickClearAmount: (e) -> scope.set('amount', 0)
 
 ```
+
+### Context in method
+
+Within method is invoked, is a context, you can use `this` or `@` (in coffeescript) to access.
+
+```coffeescript
+controllerPrototype = casua.defineController (scope) ->
+
+  accessContextExample: -> 
+    @ or this # the context
+    this.anotherMethod() # call another method in controller
+    this.$parent # refers to parent controller is exist
+    this.$parent.someMethod() # call the method in parent controller
+    this.$node() # get the current node that this `accessContextExample` is binded to
+    this.$node('$root') # get the named node `$root`, which default is root node of controller
+    this.$node('.name') # <=> this.$node().find('.name')
+
+    this.$parent.$node() # can NOT do that, access parent nodes
+
+  anotherMethod: ->
+    console.log 'called'
+```
+
