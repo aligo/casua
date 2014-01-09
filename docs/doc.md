@@ -319,10 +319,9 @@ controllerPrototype = casua.defineController (scope) ->
 ```coffeescript
 exampleController = casua.defineController (scope) ->
   scope.set 'was_or_not', 'was not'
-  
   onClick: -> scope.set 'was_or_not', 'was'
 
-app_node = casua.Node document.getElementById('app')
+app_node = new casua.Node document.getElementById('app')
 
 template =
   'div':
