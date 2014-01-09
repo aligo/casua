@@ -238,7 +238,7 @@ The controller in casua, are behind the DOM elements, used to response the user 
 ### To define a controller
 
 ```javascript
-controllerPrototype = casua.defineController( function (scope) {
+exampleController = casua.defineController( function (scope) {
   /* Constructor 
    * This constructor function will be called when everytime the controller be instantiated.
    * Over here, You can initialize data to scope, such as loading data from backend api.
@@ -264,13 +264,33 @@ controllerPrototype = casua.defineController( function (scope) {
 In fact, casua is designed to be used together with coffeescript, the code above in coffeescript will be more simple and clear, like:
 
 ```coffeescript
-controllerPrototype = casua.defineController (scope) ->
+exampleController = casua.defineController (scope) ->
   scope.set('amount', 10)
 
   computedAmount: -> scope.get('amount') + 100 
   onClickClearAmount: (e) -> scope.set('amount', 0)
 
 ```
+
+### New Controller
+
+After you defined prototype of controller, you can use `new` opreator to get a instance of the controller.
+
+`instance = new exampleController(init_data, parent_controller)`
+ - `init_data` *[ Object / casua.Scope ]* all passed in `init_data` will be converted to casua.Scope, and can be accessed by `scope` in controller
+ - `parent_controller` Optional, parent of current controller
+
+### render() / renderAt()
+
+Once you get a instance of controller, contained the scope of data, you can render the view with the template to DOM element.
+
+`instance.renderAt(container, template)`
+
+The `container` here, can be a casua.Node, DOM element, or even a jQuery object.
+
+`node = instance.render(template)`
+
+Return a div node, which as container of the view, for you can insert it to anywhere later.
 
 ### Context in method
 
@@ -294,3 +314,21 @@ controllerPrototype = casua.defineController (scope) ->
     console.log 'called'
 ```
 
+### Example
+
+```coffeescript
+exampleController = casua.defineController (scope) ->
+  scope.set 'was_or_not', 'was not'
+  
+  onClick: -> scope.set 'was_or_not', 'was'
+
+app_node = casua.Node document.getElementById('app')
+
+template =
+  'div':
+    '@on click': 'onClick()'
+    '@text': 'this {{@was_or_not}} clicked'
+
+new exampleController().renderAt app_node, template
+
+```
