@@ -339,13 +339,13 @@ new exampleController().renderAt app_node, template
 
 ---
 
-CST (Casua Structured Template)
+## CST (Casua Structured Template)
 
 The CST in casua, inspired by haml and jade, is a clear and beautiful markup, to simply describe the structure of html, and the data bindings to html element. 
 
-The CST can be setup as a javascript object, but it only looks good, clear and well-indented in coffeescript. Maybe later casua should provide a parser, for converting plain-text template (more clear, no quotes and colons) or even html to this kind of CST object. But for now, let's use coffee. A CST in coffee looks like this:
+The CST can be created as a javascript object, nested the tree like structure of html, but it only looks good, clear and well-indented in coffeescript. Maybe later casua should provide a parser, for converting plain-text template (more clear, no quotes and colons) or even html to this kind of CST object. But for now, let's use coffee. A CST in coffee looks like this:
 
-```
+```coffeescript
 '#div-id.div-class':
   'a href="http://www.xxx.com/"': 'link text'
   'h1':
@@ -359,5 +359,25 @@ The CST can be setup as a javascript object, but it only looks good, clear and w
         '@html': 'htmlContent()'
 ```
 
+### @child
+`'@child key': ...`
+ - `key`: a child scope in the current scope
+The CST under the '@child' binding, will use the child scope as new root scope.
 
+```coffeescript
+'@child company':
+  'p':
+    '@text': '@name'
+# <=>
+'p':
+  '@text': '@company.name'
+```
+
+If the child scope is a ArrayScope, the child CST will be rendered with each item of it, and adding, deleting or sorting of items will automatically be handled.
+
+```coffeescript
+'ul':
+  '@child companies':
+    'li': '@name'
+```
 
