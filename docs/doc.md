@@ -381,3 +381,30 @@ If the child scope is a ArrayScope, the child CST will be rendered with each ite
     'li': '@name'
 ```
 
+### @controller
+`'@controller': controller_prototype`
+ - `controller_prototype`: a prototype of controller returned by `defineController`, to be noticed it should not to be wrapped in quotes.
+Defines current node and its childs bind to given controller, replace the current.
+
+```coffeescript
+'.new-controller'
+  '@controller': newController
+  '@text': 'methodInNewController()'
+```
+
+### @if / @unless
+`'@if': 'expression'`
+`'@unless': 'expression'`
+ - `expression`: A javascript boolen expression, you can use `@key` get the value in current scope, or `method()` to call controller method.
+Defines whether the current node is rendered to html structure, according to the results of the expression.
+Notice: this is data-binding definition, if scope value or method return in expression has been changed, the node would be re-rendered immediately according to new result.
+
+```coffeescript
+'.div1':
+  '@if': '@isDiv1Shown'
+'.div2':
+  '@unless': 'isDiv2Hidden()'
+'.div3':
+  '@if': '@isDiv3Shown && !isDiv3Hidden()'
+```
+
