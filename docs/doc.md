@@ -3,6 +3,7 @@ casua.Node is a wrapping to basic HTML DOM element, provides some jQuery-like me
 
 ### constructor / initialize  
 `new casua.Node(element)`
+
  - `element` *[ String / casua.Node / Dom Element ]* 
  - Returns a *[ casua.Node ]* wrapping to `element`
 
@@ -26,15 +27,18 @@ new casua.Node(document.createElement('div'))
 
 ### append
 `node.append(content)` append content to the end of node
+
  - `content` *[ String / casua.Node / Dom Element ]*
  - Returns `node` itself
  
 ### attr
 `node.attr(name)` get attribute value
+
  - `name` *[ String ]* attribute name
  - Returns attribute value
 
 `node.attr(name, value)` set attribute value
+
  - `name` *[ String ]* attribute name
  - `value` *[ Any ]* attribute value
  - Returns `node` itself
@@ -42,55 +46,67 @@ new casua.Node(document.createElement('div'))
 ### empty
 `node.empty()`
 Remove all child nodes
+
  - Returns `node` itself
 
 ### find
 `node.find(query)`
+
  - `query` *[ String ]* CSS3 Selector's querying if broswer supports, looking-up by tag name if not
  - Returns `casua.Node` found node(s)
 
 ### html
 `node.html()` get the HTML content
+
  - Returns the HTML
 
 `node.html(html)` set the HTML content
+
  - `html` *[ String ]* the HTML to set
  - Returns `node` itself
 
 ### on
 `node.on(type, handler)` attach an event handler 
+
  - `type` *[ String ]* event type, such as "click", "dblclick", "focus"
  - `handler` *[ Function ]*
  - Returns `node` itself
 
 ### parent
 `node.parent()`
+
  - Returns the parent of node if exists
 
 ### replaceWith
 `node.replaceWith(content)` replace this node with the content
+
  - `content` *[ String / casua.Node / Dom Element ]*
  - Returns `node` itself
 
 ### text
 `node.text()` get the text content
+
  - Returns the text
  
 `node.text(text)` set the text content
+
  - `text` *[ String ]* the text to set
  - Returns `node` itself
  
 ### trigger
 `node.trigger(type, event_data)` execute all handlers with given event type
+
  - `type` *[ String ]* event type, such as "click", "dblclick", "focus"
  - `event_data` *[ Object ]* additonal parameters to pass along to the event handler, such as `{'custom':'value'}`
  - Returns `node` itself
 
 ### val
 `node.val()` get the value
+
  - Returns attribute value
 
 `node.val(value)` set the value
+
  - `value` *[ Any ]* the value to set
  - Returns `node` itself
 
@@ -102,12 +118,14 @@ casua.Scope basically like a js object, has properties that is used to contain d
 
 ### constructor / initialize  
 `new casua.Scope(init_data, [parent])`
+
  - `init_data` *[ Object ]* initial data
  - `parent` *[ casua.Scope ]* parent scope attached to this new scope
  - Returns a *[ casua.Scope ]*
 
 ### get
 `scope.get(key)`
+
  - `key` *[ String ]*
  - Returns *[ Any / casua.Scope ]*
 
@@ -135,17 +153,20 @@ scope.get('$parent.job.company') # => 'cool'
 
 ### set
 `scope.set(key, value)`
+
  - `key` *[ String ]* supports same format as get()
  - `value` *[ Any / casua.Scope ]*
  - Returns `scope` itself
 
 ### remove
 `scope.remove(key)` remove the property
+
  - `key` *[ String ]* supports same format as get()
  - Returns `scope` itself
 
 ### $watch
 `scope.$watch(key, handler)` attach a watch handler 
+
  - `key` *[ String ]* supports same format as get()
  - `handler` *[ Function ]*
  - Returns `scope` itself
@@ -153,6 +174,7 @@ scope.get('$parent.job.company') # => 'cool'
 ### Watch Handlers
 When scope changes, watch handlers attached to the changed property will be invoked, with passed three parameters:
 `( new_val, old_val, key )`
+
  - `new_val` the new value after change
  - `old_val` the old value before change
  - `key` the changed property key
@@ -176,48 +198,58 @@ ArrayScope also provides following methods:
 
 ### length
 `scope.length()` get the length of array
+
  - Returns *[ Integer ]*
 
 ### each
 `scope.each(fn)` iterates over array
+
  - `fn` *[ Function ]* Each invocation of iterator is called it with two arguments: `(element, index)`, and context `this` is the ArrayScope itself.
  - `handler` *[ Function ]*
  - Returns `scope` itself
 
 ### indexOf
 `scope.indexOf(element)`
+
  - `element` *[ Any / casua.Scope ]*
  - Returns *[ Integer ]* position of element in array, if element not exist, returns -1
 
 ### pop
 `scope.pop()` removes last element of array, returns that element
+
  - Returns *[ Any / casua.Scope ]*
 
 ### push
 `scope.push(element1, element2, ..., elementX)`
+
  - `element` *[ Any / casua.Scope ]* adds new items to the end of an array, returns new length.
  - Returns *[ Integer ]*
 
 ### reverse
 `scope.reverse()` reverses the order of the elements in array
+
  - Returns `scope` itself
 
 ### shift
 `scope.shift()` removes first element of array, returns that element
+
  - Returns *[ Any / casua.Scope ]*
 
 ### sort
 `scope.sort(fn)`
+
  - `fn` *[ Function ]* called with arguments: `(a, b)`, and `a` and `b` will be sorted ascending or descending, based on numbers `fn` return.
  - Returns *[ Any / casua.Scope ]*
 
 ### unshift
 `scope.unshift(element1, element2, ..., elementX)`
+
  - `element` *[ Any / casua.Scope ]* adds new items to the beginning of an array, returns new length.
  - Returns *[ Integer ]*
 
 ### filter
 `scope.filter(fn)` looks through each element in array, keep only elements that pass a truth test (`fn` return).
+
  - `fn` *[ Function ]* called it with two arguments: `(element, index)`, and context `this` is the ArrayScope itself.
  - Returns `scope` itself
 
@@ -232,6 +264,7 @@ When the changes happended, handler will be invoked with passed three parameters
 ```
 (pos, null, '$move')
 ```
+
  - pos *[ Array ]* its index refers to the original position of element, and its value refers to new position, such as `[ 2, 1, 0 ]`, means that array has been reversed, first element is moved to position 2, which is last, and second still in position 1, and last gone to the 0, became first.
 
 
@@ -361,6 +394,7 @@ The CST can be created as a javascript object, nested the tree like structure of
 
 ### @child
 `'@child key': ...`
+
  - `key`: a child scope in the current scope
 
 The CST under the '@child' binding, will use the child scope as new root scope.
@@ -384,6 +418,7 @@ If the child scope is a ArrayScope, the child CST will be rendered with each ite
 
 ### @controller
 `'@controller': controller_prototype`
+
  - `controller_prototype`: a prototype of controller returned by `defineController`, to be noticed it should not to be wrapped in quotes.
 
 Defines current node and its childs bind to given controller, replace the current.
@@ -398,6 +433,7 @@ Defines current node and its childs bind to given controller, replace the curren
 `'@if': 'expression'`
 
 `'@unless': 'expression'`
+
  - `expression`: A javascript boolen expression, you can use `@key` get the value in current scope, or `method()` to call controller method.
 
 Defines whether the current node is rendered to html structure, according to the results of the expression.
@@ -410,5 +446,27 @@ Notice: this is data-binding definition, if scope value or method return in expr
   '@unless': 'isDiv2Hidden()'
 '.div3':
   '@if': '@isDiv3Shown && !isDiv3Hidden()'
+```
+
+### @text / @html
+`'@text': 'expression'`
+
+`'@html': 'expression'` 
+
+ - `expression`: A CST data binding expression.
+
+The `@text` or `@html` binding, defines the content of node, if the result of expression has been changed, the node content would be updated immediately.
+`@html` binding will put actually string of the scope value into the node, you can use it to render html. And `@text` will not, string will be escaped.
+
+CST data binding expression supports:
+```
+'.div1':
+  '@html': 'this is <b>content</b>' # plain text or html
+'.div2':
+  '@text': '@key' # binding to single value of scope
+'.div3':
+  '@html': 'formatedHtml()' # to return of controller method
+'.div4':
+  '@text': '{{@name}} is a {{kindName()}}' # mixing text, scope and controller
 ```
 
