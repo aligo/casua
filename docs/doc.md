@@ -470,3 +470,7 @@ CST data binding expression supports:
   '@text': '{{@name}} is a {{kindName()}}' # mixing text, scope and controller
 ```
 
+### @val
+`'@val': '@key'`
+`'@val': 'method()'`
+
