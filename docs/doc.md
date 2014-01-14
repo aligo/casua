@@ -459,7 +459,7 @@ The `@text` or `@html` binding, defines the content of node, if the result of ex
 `@html` binding will put actually string of the scope value into the node, you can use it to render html. And `@text` will not, string will be escaped.
 
 CST data binding expression supports:
-```
+```coffeescript
 '.div1':
   '@html': 'this is <b>content</b>' # plain text or html
 '.div2':
@@ -472,5 +472,28 @@ CST data binding expression supports:
 
 ### @val
 `'@val': '@key'`
+
 `'@val': 'method()'`
 
+The '@val' binding, defines the value of input elements. When the value of scope or the return of method has been changed. the input value would be updated, and when user changed value of input, the binded scope value would be updated, or the binded method would be called with new value as first parameter.
+
+```coffeescript
+'.last-name': '@last'
+'input.name type="text"'
+  '@value': '@name'
+'input.full_name type="text"'
+  '@value': 'fullName()'
+
+# and the controller
+nameController = casua.defineController (scope) ->
+  scope.set('name', 'John')
+  scope.set('last', 'Doe')
+
+  fullName: (new_name) ->
+    if new_name
+      name = new_name.split(' ')
+      scope.set('name', name[0])
+      scope.set('last', name[1])
+    else
+      scope.get('name') + ' ' + scope.get('last')
+```
