@@ -470,6 +470,11 @@ CST data binding expression supports:
   '@text': '{{@name}} is a {{kindName()}}' # mixing text, scope and controller
 ```
 
+Also `@text` can be shoft defined likes this:
+```coffeeescript
+'.div': 'text content in div {{@hello}}'
+```
+
 ### @val
 `'@val': '@key'`
 
