@@ -520,3 +520,5 @@ The '@attr' binding, defines the attribute value of given attribute name.
   '@attr checked': '@is_checked'
 ```
 
+### @class
+Shortcut of `'@attr class'`
