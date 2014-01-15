@@ -502,3 +502,21 @@ nameController = casua.defineController (scope) ->
     else
       scope.get('name') + ' ' + scope.get('last')
 ```
+
+### @attr
+`'@attr html_attribute_name': '@key'`
+
+`'@attr html_attribute_name': 'method()'`
+
+The '@attr' binding, defines the attribute value of given attribute name.
+
+
+```coffeescript
+'.div1':
+  '@attr class': '@div1_classes'
+'.div2':
+  '@attr style': 'customStyle()'
+'input type="checkbox"':
+  '@attr checked': '@is_checked'
+```
+
