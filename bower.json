@@ -13,7 +13,8 @@
     "bower_components",
     "examples",
     "test",
-    "site"
+    "doc",
+    "gh-pages"
   ],
   "dependencies": {},
   "devDependencies": {
