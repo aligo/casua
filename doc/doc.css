@@ -42,12 +42,11 @@ pre {
   top: 0;
   left: 0;
   bottom: 0;
-  background: #f6f6f0;
+  background: #f6f6ee;
 }
 
 #main-content {
-  margin: 40px 0 50px 260px;
-  width: 550px;
+  margin: 40px 50px 50px 260px;
 }
 
 #side-index .unit {

@@ -16,7 +16,8 @@ window.docs_controller =
         scope.set('amount', 10);
         return {
           /* Returns Methods
-           * Everytime controller is invoked, should return a object, which contained some methods like following, to bind with view.
+           * Everytime controller is invoked, should return a object, 
+           * which contained some methods like following, to bind with view.
            */
           computedAmount: function () {
             // Return a computed value
