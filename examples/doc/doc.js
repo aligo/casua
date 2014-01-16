@@ -44,7 +44,7 @@
     },
     '#main-content': {
       'header': {
-        'h1': 'Casua',
+        'h1.casua': 'Casua',
         'p #1': 'A casual and neat Structured Template and MVVM engine.',
         'p #2': {
           'a href="https://github.com/aligo/casua"': {
@@ -81,7 +81,7 @@
   };
 
   new DocApp({
-    units: [window.docs_node]
+    units: [window.docs_controller, window.docs_cst, window.docs_scope, window.docs_arrayscope, window.docs_node]
   }).renderAt(app_node, template);
 
 }).call(this);

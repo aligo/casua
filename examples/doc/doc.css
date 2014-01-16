@@ -5,6 +5,11 @@ body {
   color: #111;
   font-weight: 300;
   background: #f0f0ee;
+  overflow-x: hidden;
+}
+
+h1.casua {
+  font-size: 36px;
 }
 
 a {
@@ -24,6 +29,8 @@ a small {
 pre {
   padding: 14px;
   background: #ddd;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 #side-index {
@@ -49,7 +56,7 @@ pre {
 
 #side-index ul.sections {
   list-style-type: none;
-  padding: 10px 0 0 10px;
+  padding: 4px 0 0 10px;
   margin: 0;
 }
 
