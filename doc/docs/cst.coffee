@@ -1,6 +1,6 @@
 window.docs_cst =
   id: 'cst'
-  title: 'CST'
+  title: 'CST (Template)'
   content: """
   The CST (Casua Structured Template) in casua, inspired by haml and jade, is a clear and beautiful markup, to simply describe the structure of html, and the data bindings to html element. 
 
