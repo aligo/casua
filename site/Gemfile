@@ -1,8 +1,0 @@
-source 'https://rubygems.org'
-
-gem 'jekyll'
-gem 'jekyll-slim'
-gem 'jekyll-less'
-gem 'jekyll-asset-pipeline'
-gem 'uglifier'
-gem 'therubyracer'

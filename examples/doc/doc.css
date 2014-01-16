@@ -9,7 +9,7 @@ body {
 
 a {
   color: #983;
-  font-weight: 400;
+  font-weight: 700;
   text-decoration: none;
   outline: none;
 }
@@ -19,6 +19,11 @@ a small {
   color: #777;
   margin-top: -0.6em;
   display: block;
+}
+
+pre {
+  padding: 14px;
+  background: #ddd;
 }
 
 #side-index {
@@ -31,12 +36,33 @@ a small {
   left: 0;
   bottom: 0;
   background: #f6f6f0;
-  .i-unit {
-    font-weight: bold;
-    text-decoration: underline;
-  }
 }
+
 #main-content {
   margin: 40px 0 50px 260px;
   width: 550px;
+}
+
+#side-index .unit {
+  padding-bottom: 30px;
+}
+
+#side-index ul.sections {
+  list-style-type: none;
+  padding: 10px 0 0 10px;
+  margin: 0;
+}
+
+#side-index ul.sections li a {
+  font-weight: 300;
+  color: #000;
+}
+
+#side-index .unit a.name {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+#main-content .unit {
+  padding-top: 30px;
 }

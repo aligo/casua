@@ -1,4 +1,0 @@
-exclude: [ Gemfile, Gemfile.lock ]
-baseurl: /casua/
-asset_pipeline:
-  display_path: casua/assets

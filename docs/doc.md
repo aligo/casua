@@ -23,7 +23,7 @@ new casua.Node('<div></div>')
 
 new casua.Node(document.createElement('div'))
 # => <div></div>
-  ```
+```
 
 ### append
 `node.append(content)` append content to the end of node
