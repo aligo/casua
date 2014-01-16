@@ -1,2 +1,416 @@
-<!DOCTYPE html><html><head><meta content="text/html;charset=UTF-8" http-equiv="content-type" /><meta content="chrome=1" http-equiv="X-UA-Compatible" /><meta content="width=device-width, initial-scale=1.0" name="viewport" /><meta content="target-densitydpi=device-dpi" name="viewport" /><meta content="true" name="HandheldFriendly" /><title>Casua - A casual and neat Structured Template and MVVM engine.</title><link href='/casua/assets/casua-641b050d0e7904f15d8ed08b5aa2b7e1.css' rel='stylesheet' type='text/css' />
-</head><body><div id="side-index"><a class="i-unit" href="#">Casua (0.0.2)</a></div><div id="main-content"><header><h1>Casua</h1><p>A casual and neat Structured Template and MVVM engine.</p><p><a href="https://github.com/aligo/casua">View the Project on GitHub <small>aligo/casua</small></a></p></header></div></body></html>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html;charset=UTF-8" http-equiv="content-type" />
+    <meta content="chrome=1" http-equiv="X-UA-Compatible" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="target-densitydpi=device-dpi" name="viewport" />
+    <meta content="true" name="HandheldFriendly" />
+    <title>Casua - A casual and neat Structured Template and MVVM engine.</title>
+    <link href='doc.css' rel='stylesheet' type='text/css' />
+  </head>
+  <body>
+<div id="doc-app"><div id="side-index"><div class="unit"><a class="name" href="#">Casua (0.0.2)</a></div><div class="units"><div class="unit"><a class="name" href="#controller">Controller</a><ul class="sections"><li><a href="#controller-define">To define a controller</a></li><li><a href="#controller-new">New Controller</a></li><li><a href="#controller-render">render() / renderAt()</a></li><li><a href="#controller-content">Context in method</a></li><li><a href="#controller-example">Example</a></li></ul></div><div class="unit"><a class="name" href="#cst">CST (Template)</a><ul class="sections"><li><a href="#cst-controller">@controller</a></li><li><a href="#cst-if-unless">@if / @unless</a></li><li><a href="#cst-text-html">@text / @html</a></li><li><a href="#cst-val">@val</a></li><li><a href="#cst-attr">@attr</a></li><li><a href="#cst-class">@class</a></li></ul></div><div class="unit"><a class="name" href="#scope">casua.Scope</a><ul class="sections"><li><a href="#scope-constructor">constructor / initialize</a></li><li><a href="#scope-get">get</a></li><li><a href="#scope-set">set</a></li><li><a href="#scope-remove">remove</a></li><li><a href="#scope-watch">$watch</a></li><li><a href="#scope-handlers">Watch Handlers</a></li></ul></div><div class="unit"><a class="name" href="#arrayscope">casua.ArrayScope</a><ul class="sections"><li><a href="#arrayscope-length">length</a></li><li><a href="#arrayscope-each">each</a></li><li><a href="#arrayscope-indexOf">indexOf</a></li><li><a href="#arrayscope-pop">pop</a></li><li><a href="#arrayscope-push">push</a></li><li><a href="#arrayscope-reverse">reverse</a></li><li><a href="#arrayscope-shift">shift</a></li><li><a href="#arrayscope-sort">sort</a></li><li><a href="#arrayscope-unshift">unshift</a></li><li><a href="#arrayscope-filter">filter</a></li></ul></div><div class="unit"><a class="name" href="#node">casua.Node</a><ul class="sections"><li><a href="#node-constructor">constructor / initialize</a></li><li><a href="#node-append">append</a></li><li><a href="#node-attr">attr</a></li><li><a href="#node-empty">empty</a></li><li><a href="#node-find">find</a></li><li><a href="#node-html">html</a></li><li><a href="#node-on">on</a></li><li><a href="#node-parent">parent</a></li><li><a href="#node-replaceWith">replaceWith</a></li><li><a href="#node-text">text</a></li><li><a href="#node-trigger">trigger</a></li><li><a href="#node-val">val</a></li></ul></div></div></div><div id="main-content"><header><h1 class="casua">Casua</h1><p>A casual and neat Structured Template and MVVM engine.</p><p><a href="https://github.com/aligo/casua"><span>View the Project on GitHub</span><small>aligo/casua</small></a></p></header><div class="units"><div class="unit" id="controller"><h1>Controller</h1><div><p>The controller in casua, are behind the DOM elements, used to response the user interaction and update the result to the view. Todo that, a controller should have some methods, which can binded as event handler of DOM element, or as computed value to html, attrbutes or condition of DOM el ement.</p></div><div class="sections"><div class="section" id="controller-define"><h2>To define a controller</h2><div><pre><code class="javascript">exampleController = casua.defineController( function (scope) {
+  /* Constructor 
+   * This constructor function will be called when everytime the controller be instantiated.
+   * Over here, You can initialize data to scope, such as loading data from backend api.
+   */
+  scope.set('amount', 10);
+  return {
+    /* Returns Methods
+     * Everytime controller is invoked, should return a object, 
+     * which contained some methods like following, to bind with view.
+     */
+    computedAmount: function () {
+      // Return a computed value
+      return scope.get('amount') + 100;
+    },
+    onClickClearAmount: function (event) {
+      // Binded as a onclick event handler, argument event passed in is a DOM Event.
+      scope.set('amount', 0);
+    }
+  };
+} );
+</code></pre>
+
+<p>In fact, casua is designed to be used together with coffeescript, the code above in coffeescript will be more simple and clear, like:</p>
+
+<pre><code class="coffeescript">exampleController = casua.defineController (scope) -&gt;
+  scope.set('amount', 10)
+
+  computedAmount: -&gt; scope.get('amount') + 100 
+  onClickClearAmount: (e) -&gt; scope.set('amount', 0)
+</code></pre></div></div><div class="section" id="controller-new"><h2>New Controller</h2><div><p>After you defined prototype of controller, you can use <code>new</code> opreator to get a instance of the controller.</p>
+
+<p><code>instance = new exampleController(init_data, parent_controller)</code>
+ - <code>init_data</code> <em>[ Object / casua.Scope ]</em> all passed in <code>init_data</code> will be converted to casua.Scope, and can be accessed by <code>scope</code> in controller
+ - <code>parent_controller</code> Optional, parent of current controller</p></div></div><div class="section" id="controller-render"><h2>render() / renderAt()</h2><div><p>Once you get a instance of controller, contained the scope of data, you can render the view with the template to DOM element.</p>
+
+<p><code>instance.renderAt(container, template)</code></p>
+
+<p>The <code>container</code> here, can be a casua.Node, DOM element, or even a jQuery object.</p>
+
+<p><code>node = instance.render(template)</code></p>
+
+<p>Return a div node, which as container of the view, for you can insert it to anywhere later.</p></div></div><div class="section" id="controller-content"><h2>Context in method</h2><div><p>Within method is invoked, is a context, you can use <code>this</code> or <code>@</code> (in coffeescript) to access.</p>
+
+<pre><code class="coffeescript">controllerPrototype = casua.defineController (scope) -&gt;
+
+  accessContextExample: -&gt; 
+    @ or this # the context
+    this.anotherMethod() # call another method in controller
+    this.$parent # refers to parent controller is exist
+    this.$parent.someMethod() # call the method in parent controller
+    this.$node() # get the current node that this `accessContextExample` is binded to
+    this.$node('$root') # get the named node `$root`, which default is root node of controller
+    this.$node('.name') # &lt;=&gt; this.$node().find('.name')
+
+    this.$parent.$node() # can NOT do that, access parent nodes
+
+  anotherMethod: -&gt;
+    console.log 'called'
+</code></pre></div></div><div class="section" id="controller-example"><h2>Example</h2><div><pre><code class="coffeescript">exampleController = casua.defineController (scope) -&gt;
+  scope.set 'was_or_not', 'was not'
+  onClick: -&gt; scope.set 'was_or_not', 'was'
+
+app_node = new casua.Node document.getElementById('app')
+
+template =
+  'div':
+    '@on click': 'onClick()'
+    '@text': 'this {{@was_or_not}} clicked'
+
+new exampleController().renderAt app_node, template
+</code></pre></div></div></div></div><div class="unit" id="cst"><h1>CST (Template)</h1><div><p>The CST (Casua Structured Template) in casua, inspired by haml and jade, is a clear and beautiful markup, to simply describe the structure of html, and the data bindings to html element. </p>
+
+<p>The CST can be created as a javascript object, nested the tree like structure of html, but it only looks good, clear and well-indented in coffeescript. Maybe later casua should provide a parser, for converting plain-text template (more clear, no quotes and colons) or even html to this kind of CST object. But for now, let's use coffee. A CST in coffee looks like this:</p>
+
+<pre><code class="coffeescript">'#div-id.div-class':
+  'a href="http://www.xxx.com/"': 'link text'
+  'h1':
+    '@on click': 'clickTitle()'
+    '@text': '@title'
+    '@attr class': '@titleClass()'
+  'ul':
+    '@child lists':
+      '@controller': ItemController
+      'li class="item"':
+        '@html': 'htmlContent()'
+</code></pre></div><div class="sections"><div class="section" id="cst-controller"><h2>@controller</h2><div><p><code>'@controller': controller_prototype</code></p>
+
+<ul>
+<li><code>controller_prototype</code>: a prototype of controller returned by <code>defineController</code>, to be noticed it should not to be wrapped in quotes.</li>
+</ul>
+
+<p>Defines current node and its childs bind to given controller, replace the current.</p>
+
+<pre><code class="coffeescript">'.new-controller'
+  '@controller': newController
+  '@text': 'methodInNewController()'
+</code></pre></div></div><div class="section" id="cst-if-unless"><h2>@if / @unless</h2><div><p><code>'@if': 'expression'</code></p>
+
+<p><code>'@unless': 'expression'</code></p>
+
+<ul>
+<li><code>expression</code>: A javascript boolen expression, you can use <code>@key</code> get the value in current scope, or <code>method()</code> to call controller method.</li>
+</ul>
+
+<p>Defines whether the current node is rendered to html structure, according to the results of the expression.
+Notice: this is data-binding definition, if scope value or method return in expression has been changed, the node would be re-rendered immediately according to new result.</p>
+
+<pre><code class="coffeescript">'.div1':
+  '@if': '@isDiv1Shown'
+'.div2':
+  '@unless': 'isDiv2Hidden()'
+'.div3':
+  '@if': '@isDiv3Shown &amp;&amp; !isDiv3Hidden()'
+</code></pre></div></div><div class="section" id="cst-text-html"><h2>@text / @html</h2><div><p><code>'@text': 'expression'</code></p>
+
+<p><code>'@html': 'expression'</code> </p>
+
+<ul>
+<li><code>expression</code>: A CST data binding expression.</li>
+</ul>
+
+<p>The <code>@text</code> or <code>@html</code> binding, defines the content of node, if the result of expression has been changed, the node content would be updated immediately.
+<code>@html</code> binding will put actually string of the scope value into the node, you can use it to render html. And <code>@text</code> will not, string will be escaped.</p>
+
+<p>CST data binding expression supports:</p>
+
+<pre><code class="coffeescript">'.div1':
+  '@html': 'this is &lt;b&gt;content&lt;/b&gt;' # plain text or html
+'.div2':
+  '@text': '@key' # binding to single value of scope
+'.div3':
+  '@html': 'formatedHtml()' # to return of controller method
+'.div4':
+  '@text': '{{@name}} is a {{kindName()}}' # mixing text, scope and controller
+</code></pre>
+
+<p>Also <code>@text</code> can be shoft defined likes this:</p>
+
+<pre><code class="coffeeescript">'.div': 'text content in div {{@hello}}'
+</code></pre></div></div><div class="section" id="cst-val"><h2>@val</h2><div><p><code>'@val': '@key'</code></p>
+
+<p><code>'@val': 'method()'</code></p>
+
+<p>The '@val' binding, defines the value of input elements. When the value of scope or the return of method has been changed. the input value would be updated, and when user changed value of input, the binded scope value would be updated, or the binded method would be called with new value as first parameter.</p>
+
+<pre><code class="coffeescript">'.last-name': '@last'
+'input.name type="text"'
+  '@value': '@name'
+'input.full_name type="text"'
+  '@value': 'fullName()'
+
+# and the controller
+nameController = casua.defineController (scope) -&gt;
+  scope.set('name', 'John')
+  scope.set('last', 'Doe')
+
+  fullName: (new_name) -&gt;
+    if new_name
+      name = new_name.split(' ')
+      scope.set('name', name[0])
+      scope.set('last', name[1])
+    else
+      scope.get('name') + ' ' + scope.get('last')
+</code></pre></div></div><div class="section" id="cst-attr"><h2>@attr</h2><div><p><code>'@attr html_attribute_name': '@key'</code></p>
+
+<p><code>'@attr html_attribute_name': 'method()'</code></p>
+
+<p>The '@attr' binding, defines the attribute value of given attribute name.</p>
+
+<pre><code class="coffeescript">'.div1':
+  '@attr class': '@div1_classes'
+'.div2':
+  '@attr style': 'customStyle()'
+'input type="checkbox"':
+  '@attr checked': '@is_checked'
+</code></pre></div></div><div class="section" id="cst-class"><h2>@class</h2><div><h3 id="class">@class</h3>
+
+<p>Shortcut of <code>'@attr class'</code></p></div></div></div></div><div class="unit" id="scope"><h1>casua.Scope</h1><div><p>casua.Scope basically like a js object, has properties that is used to contain data, the difference is that casua.Scope with a pair of get () and set () method to change their properties, so related watch handlers can be fired the scope of what data has been modified in order to update the view.</p></div><div class="sections"><div class="section" id="scope-constructor"><h2>constructor / initialize</h2><div><p><code>new casua.Scope(init_data, [parent])</code></p>
+
+<ul>
+<li><code>init_data</code> <em>[ Object ]</em> initial data</li>
+<li><code>parent</code> <em>[ casua.Scope ]</em> parent scope attached to this new scope</li>
+<li>Returns a <em>[ casua.Scope ]</em></li>
+</ul></div></div><div class="section" id="scope-get"><h2>get</h2><div><p><code>scope.get(key)</code></p>
+
+<ul>
+<li><code>key</code> <em>[ String ]</em></li>
+<li>Returns <em>[ Any / casua.Scope ]</em></li>
+</ul>
+
+<p>Using <code>$parent</code> in key, can resolve to parent of current scope (if exist).</p>
+
+<p>examples:</p>
+
+<pre><code class="coffeescript">scope = new casua.Scope {
+  name: 'Joe'
+  age: 35
+  job: {
+    company: 'cool'
+    title: 'coder'
+  }
+}
+scope.get('name') # =&gt; 'Joe'
+scope.get('job') # =&gt; *[ casua.Scope ]*
+scope.get('job').get('company') # =&gt; 'cool'
+scope.get('job.title') # =&gt; 'coder'
+job_scope = scope.get('job')
+job_scope.get('$parent') # =&gt; *[ casua.Scope ]* back to scope
+job_scope.get('$parent.age') # =&gt; 35
+scope.get('$parent.job.company') # =&gt; 'cool'
+</code></pre></div></div><div class="section" id="scope-set"><h2>set</h2><div><p><code>scope.set(key, value)</code></p>
+
+<ul>
+<li><code>key</code> <em>[ String ]</em> supports same format as get()</li>
+<li><code>value</code> <em>[ Any / casua.Scope ]</em></li>
+<li>Returns <code>scope</code> itself</li>
+</ul></div></div><div class="section" id="scope-remove"><h2>remove</h2><div><p><code>scope.remove(key)</code> remove the property</p>
+
+<ul>
+<li><code>key</code> <em>[ String ]</em> supports same format as get()</li>
+<li>Returns <code>scope</code> itself</li>
+</ul></div></div><div class="section" id="scope-watch"><h2>$watch</h2><div><p><code>scope.$watch(key, handler)</code> attach a watch handler </p>
+
+<ul>
+<li><code>key</code> <em>[ String ]</em> supports same format as get()</li>
+<li><code>handler</code> <em>[ Function ]</em></li>
+<li>Returns <code>scope</code> itself</li>
+</ul></div></div><div class="section" id="scope-handlers"><h2>Watch Handlers</h2><div><p>When scope changes, watch handlers attached to the changed property will be invoked, with passed three parameters:
+<code>( new_val, old_val, key )</code></p>
+
+<ul>
+<li><code>new_val</code> the new value after change</li>
+<li><code>old_val</code> the old value before change</li>
+<li><code>key</code> the changed property key</li>
+</ul>
+
+<p>In addition casua.Scope also supports two special handlers:</p>
+
+<pre><code>scope.$watch('$add', handler)
+scope.$watch('$delete', handler)
+</code></pre>
+
+<p>They will fired when adding new property to scope or deleting property from scope.</p>
+
+<p>Three parameters passed will become:
+<code>(val, key, '$add')</code> and <code>(val, key, '$delete')</code></p></div></div></div></div><div class="unit" id="arrayscope"><h1>casua.ArrayScope</h1><div><p>ArrayScope is a special scope wrapped Array. It also have get() set() remove() and watch(), which exist and can be used like in Scope.</p>
+
+<p>ArrayScope also provides following methods:</p></div><div class="sections"><div class="section" id="arrayscope-length"><h2>length</h2><div><p><code>scope.length()</code> get the length of array</p>
+
+<ul>
+<li>Returns <em>[ Integer ]</em></li>
+</ul></div></div><div class="section" id="arrayscope-each"><h2>each</h2><div><p><code>scope.each(fn)</code> iterates over array</p>
+
+<ul>
+<li><code>fn</code> <em>[ Function ]</em> Each invocation of iterator is called it with two arguments: <code>(element, index)</code>, and context <code>this</code> is the ArrayScope itself.</li>
+<li><code>handler</code> <em>[ Function ]</em></li>
+<li>Returns <code>scope</code> itself</li>
+</ul></div></div><div class="section" id="arrayscope-indexOf"><h2>indexOf</h2><div><p><code>scope.indexOf(element)</code></p>
+
+<ul>
+<li><code>element</code> <em>[ Any / casua.Scope ]</em></li>
+<li>Returns <em>[ Integer ]</em> position of element in array, if element not exist, returns -1</li>
+</ul></div></div><div class="section" id="arrayscope-pop"><h2>pop</h2><div><p><code>scope.pop()</code> removes last element of array, returns that element</p>
+
+<ul>
+<li>Returns <em>[ Any / casua.Scope ]</em></li>
+</ul></div></div><div class="section" id="arrayscope-push"><h2>push</h2><div><p><code>scope.push(element1, element2, ..., elementX)</code></p>
+
+<ul>
+<li><code>element</code> <em>[ Any / casua.Scope ]</em> adds new items to the end of an array, returns new length.</li>
+<li>Returns <em>[ Integer ]</em></li>
+</ul></div></div><div class="section" id="arrayscope-reverse"><h2>reverse</h2><div><p><code>scope.reverse()</code> reverses the order of the elements in array</p>
+
+<ul>
+<li>Returns <code>scope</code> itself</li>
+</ul></div></div><div class="section" id="arrayscope-shift"><h2>shift</h2><div><p><code>scope.shift()</code> removes first element of array, returns that element</p>
+
+<ul>
+<li>Returns <em>[ Any / casua.Scope ]</em></li>
+</ul></div></div><div class="section" id="arrayscope-sort"><h2>sort</h2><div><p><code>scope.sort(fn)</code></p>
+
+<ul>
+<li><code>fn</code> <em>[ Function ]</em> called with arguments: <code>(a, b)</code>, and <code>a</code> and <code>b</code> will be sorted ascending or descending, based on numbers <code>fn</code> return.</li>
+<li>Returns <em>[ Any / casua.Scope ]</em></li>
+</ul></div></div><div class="section" id="arrayscope-unshift"><h2>unshift</h2><div><p><code>scope.unshift(element1, element2, ..., elementX)</code></p>
+
+<ul>
+<li><code>element</code> <em>[ Any / casua.Scope ]</em> adds new items to the beginning of an array, returns new length.</li>
+<li>Returns <em>[ Integer ]</em></li>
+</ul></div></div><div class="section" id="arrayscope-filter"><h2>filter</h2><div><p><code>scope.filter(fn)</code> looks through each element in array, keep only elements that pass a truth test (<code>fn</code> return).</p>
+
+<ul>
+<li><code>fn</code> <em>[ Function ]</em> called it with two arguments: <code>(element, index)</code>, and context <code>this</code> is the ArrayScope itself.</li>
+<li>Returns <code>scope</code> itself</li>
+</ul></div></div></div></div><div class="unit" id="node"><h1>casua.Node</h1><div><p>casua.Node is a wrapping to basic HTML DOM element, provides some jQuery-like methods, and compatible with jQuery.</p></div><div class="sections"><div class="section" id="node-constructor"><h2>constructor / initialize</h2><div><p><code>new casua.Node(element)</code></p>
+
+<ul>
+<li><code>element</code> <em>[ String / casua.Node / Dom Element ]</em> </li>
+<li>Returns a <em>[ casua.Node ]</em> wrapping to <code>element</code></li>
+</ul>
+
+<p>examples :</p>
+
+<pre><code class="coffeescript">new casua.Node('.a-div')
+# =&gt; &lt;div class="a-div"&gt;&lt;/div&gt;
+
+new casua.Node('p.p-1#p-id.p-2')
+# =&gt; &lt;p id="p-id" class="p-1 p-2"&gt;&lt;/p&gt;'
+
+new casua.Node('a href="/?a=b" target="_blank" disabled')
+# =&gt; &lt;a disabled="disabled" target="_blank" href="/?a=b"&gt;&lt;/a&gt;
+
+new casua.Node('&lt;div&gt;&lt;/div&gt;')
+# =&gt; &lt;div&gt;&lt;/div&gt;
+
+new casua.Node(document.createElement('div'))
+# =&gt; &lt;div&gt;&lt;/div&gt;
+</code></pre></div></div><div class="section" id="node-append"><h2>append</h2><div><p><code>node.append(content)</code> append content to the end of node</p>
+
+<ul>
+<li><code>content</code> <em>[ String / casua.Node / Dom Element ]</em></li>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-attr"><h2>attr</h2><div><p><code>node.attr(name)</code> get attribute value</p>
+
+<ul>
+<li><code>name</code> <em>[ String ]</em> attribute name</li>
+<li>Returns attribute value</li>
+</ul>
+
+<p><code>node.attr(name, value)</code> set attribute value</p>
+
+<ul>
+<li><code>name</code> <em>[ String ]</em> attribute name</li>
+<li><code>value</code> <em>[ Any ]</em> attribute value</li>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-empty"><h2>empty</h2><div><p><code>node.empty()</code>
+Remove all child nodes</p>
+
+<ul>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-find"><h2>find</h2><div><p><code>node.find(query)</code></p>
+
+<ul>
+<li><code>query</code> <em>[ String ]</em> CSS3 Selector's querying if broswer supports, looking-up by tag name if not</li>
+<li>Returns <code>casua.Node</code> found node(s)</li>
+</ul></div></div><div class="section" id="node-html"><h2>html</h2><div><p><code>node.html()</code> get the HTML content</p>
+
+<ul>
+<li>Returns the HTML</li>
+</ul>
+
+<p><code>node.html(html)</code> set the HTML content</p>
+
+<ul>
+<li><code>html</code> <em>[ String ]</em> the HTML to set</li>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-on"><h2>on</h2><div><p><code>node.on(type, handler)</code> attach an event handler </p>
+
+<ul>
+<li><code>type</code> <em>[ String ]</em> event type, such as "click", "dblclick", "focus"</li>
+<li><code>handler</code> <em>[ Function ]</em></li>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-parent"><h2>parent</h2><div><p><code>node.parent()</code></p>
+
+<ul>
+<li>Returns the parent of node if exists</li>
+</ul></div></div><div class="section" id="node-replaceWith"><h2>replaceWith</h2><div><p><code>node.replaceWith(content)</code> replace this node with the content</p>
+
+<ul>
+<li><code>content</code> <em>[ String / casua.Node / Dom Element ]</em></li>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-text"><h2>text</h2><div><p><code>node.text()</code> get the text content</p>
+
+<ul>
+<li>Returns the text</li>
+</ul>
+
+<p><code>node.text(text)</code> set the text content</p>
+
+<ul>
+<li><code>text</code> <em>[ String ]</em> the text to set</li>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-trigger"><h2>trigger</h2><div><p><code>node.trigger(type, event_data)</code> execute all handlers with given event type</p>
+
+<ul>
+<li><code>type</code> <em>[ String ]</em> event type, such as "click", "dblclick", "focus"</li>
+<li><code>event_data</code> <em>[ Object ]</em> additonal parameters to pass along to the event handler, such as <code>{'custom':'value'}</code></li>
+<li>Returns <code>node</code> itself</li>
+</ul></div></div><div class="section" id="node-val"><h2>val</h2><div><p><code>node.val()</code> get the value</p>
+
+<ul>
+<li>Returns attribute value</li>
+</ul>
+
+<p><code>node.val(value)</code> set the value</p>
+
+<ul>
+<li><code>value</code> <em>[ Any ]</em> the value to set</li>
+<li>Returns <code>node</code> itself}
+]</li>
+</ul></div></div></div></div></div></div></div>
+  </body>
+</html>
