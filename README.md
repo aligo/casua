@@ -3,8 +3,11 @@ Casua
 A casual and neat Structured Template and MVVM engine.
 
 
-### Version
+#### Version
 0.0.2
+
+#### Document
+http://aligo.github.io/casua/
 
 ----
 #### Author
