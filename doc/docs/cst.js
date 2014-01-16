@@ -2,7 +2,7 @@
 (function() {
   window.docs_cst = {
     id: 'cst',
-    title: 'CST (Template)',
+    title: 'CST',
     content: "The CST (Casua Structured Template) in casua, inspired by haml and jade, is a clear and beautiful markup, to simply describe the structure of html, and the data bindings to html element. \n\nThe CST can be created as a javascript object, nested the tree like structure of html, but it only looks good, clear and well-indented in coffeescript. Maybe later casua should provide a parser, for converting plain-text template (more clear, no quotes and colons) or even html to this kind of CST object. But for now, let's use coffee. A CST in coffee looks like this:\n\n```coffeescript\n'#div-id.div-class':\n  'a href=\"http://www.xxx.com/\"': 'link text'\n  'h1':\n    '@on click': 'clickTitle()'\n    '@text': '@title'\n    '@attr class': '@titleClass()'\n  'ul':\n    '@child lists':\n      '@controller': ItemController\n      'li class=\"item\"':\n        '@html': 'htmlContent()'\n```",
     sections: [
       {

@@ -13,6 +13,11 @@ examples_files = [
   'examples'
 ]
 
+doc_files = [
+  'doc'
+  'doc'
+]
+
 {spawn, exec} = require 'child_process'
 
 try
@@ -52,6 +57,7 @@ compile = (watch, callback) ->
     options.unshift '-w'
     launch 'coffee', options.concat qunit_files
   launch 'coffee', options.concat examples_files
+  launch 'coffee', options.concat doc_files
   launch 'coffee', options.concat(casua_files), callback
 
 build = (callback) ->
