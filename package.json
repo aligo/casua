@@ -11,7 +11,9 @@
     "url": "git@github.com:aligo/casua.git"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "jsdom": ">=0.8.0"
+  },
   "engines": {
     "node": ">=0.8.0"
   }

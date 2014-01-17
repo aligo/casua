@@ -36,7 +36,7 @@ red = '\x1b[0;31m'
 task 'compile', 'compile', -> compile -> log ":-)", green
 task 'watch', 'compile and watch', -> compile true, -> log ":-)", green
 task 'build', 'compile and build', -> compile -> build -> log ":-)", green
-task 'doc', 'update doc file', -> doc -> log ":-)", green
+task 'doc', 'update doc file', -> compile -> build -> doc -> log ":-)", green
 
 
 log = (message, color, explanation) -> console.log color + message + reset + ' ' + (explanation or '')
@@ -65,4 +65,5 @@ build = (callback) ->
   exec 'uglifyjs build/casua.js -o build/casua.min.js -c --mangle toplevel,eval -r "ct,sc,mm"', [], callback
 
 doc = (callback) ->
-  launch 'cp', ['doc/doc.css', 'gh-pages/', '-f'], callback
+  exec 'coffee ./doc/generate.coffee', [], ->
+    launch 'cp', ['doc/doc.css', 'gh-pages/', '-f'], callback
