@@ -12,7 +12,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "jsdom": ">=0.8.0"
+    "jsdom": ">=0.8.0",
+    "showdown": ">=0.3.0"
   },
   "engines": {
     "node": ">=0.8.0"
