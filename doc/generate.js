@@ -18,7 +18,10 @@
     var app_node, casua;
     casua = window.casua;
     app_node = new casua.Node(document.getElementById('doc-app'));
-    return fs.writeFile(__dirname + '/../gh-pages/index.html', static_template.replace('{{app_node}}', app_node.html()), function() {
+    return fs.writeFile(__dirname + '/../gh-pages/index.html', static_template.toString().replace('{{app_node}}', app_node.html()), function(err) {
+      if (err) {
+        console.log(err);
+      }
       return process.exit();
     });
   });

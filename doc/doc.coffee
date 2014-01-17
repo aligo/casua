@@ -7,6 +7,14 @@ DocApp = casua.defineController (scope) ->
 SectionCtrl = casua.defineController (scope) ->
   contentHtml: -> converter.makeHtml scope.get('content')
 
+docs = {}
+
+xhr = new XMLHttpRequest()
+for doc in ['controller', 'cst', 'scope', 'arrayscope', 'node']
+  xhr.open 'GET', 'docs/' + doc + '.yml', false
+  xhr.send()
+  docs[doc] = jsyaml.load(xhr.responseText)
+
 template =
   '#side-index':
     '.unit':
@@ -63,5 +71,5 @@ template =
 
 new DocApp(
   version: '0.0.2'
-  units: [window.docs_controller, window.docs_cst, window.docs_scope, window.docs_arrayscope, window.docs_node]
+  units: [docs.controller, docs.cst, docs.scope, docs.arrayscope, docs.node]
 ).renderAt app_node, template
