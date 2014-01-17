@@ -73,3 +73,5 @@ new DocApp(
   version: '0.0.2'
   units: [docs.controller, docs.cst, docs.scope, docs.arrayscope, docs.node]
 ).renderAt app_node, template
+
+hljs.initHighlightingOnLoad()

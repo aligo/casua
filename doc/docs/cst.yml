@@ -89,6 +89,7 @@ sections:
       ```
 
       Also `@text` can be shoft defined likes this:
+      
       ```coffeeescript
 
       '.div': 'text content in div {{@hello}}'

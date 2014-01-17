@@ -115,4 +115,6 @@
     units: [docs.controller, docs.cst, docs.scope, docs.arrayscope, docs.node]
   }).renderAt(app_node, template);
 
+  hljs.initHighlightingOnLoad();
+
 }).call(this);

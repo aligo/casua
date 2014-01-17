@@ -24,6 +24,7 @@ sections:
       Using `$parent` in key, can resolve to parent of current scope (if exist).
 
       examples:
+
       ```coffeescript
 
       scope = new casua.Scope {
@@ -35,12 +36,19 @@ sections:
         }
       }
       scope.get('name') # => 'Joe'
+
       scope.get('job') # => *[ casua.Scope ]*
+
       scope.get('job').get('company') # => 'cool'
+
       scope.get('job.title') # => 'coder'
+
       job_scope = scope.get('job')
+
       job_scope.get('$parent') # => *[ casua.Scope ]* back to scope
+
       job_scope.get('$parent.age') # => 35
+
       scope.get('$parent.job.company') # => 'cool'
 
       ```
