@@ -53,6 +53,9 @@ test 'CST @child', ->
 
 test 'CST @child ArrayScope', ->
   testController = casua.defineController ->
+    classOfItem: (cur) ->
+      'class-' + cur.get('no')
+
   testCtrlInst = new testController
     lists: []
   lists = testCtrlInst.scope.get('lists')
@@ -60,18 +63,20 @@ test 'CST @child ArrayScope', ->
   fragment1 = testCtrlInst.render
     'ul':
       '@child lists':
-        'li': 'task{{@no}}'
+        'li':
+          '@attr class': 'classOfItem()'
+          '@text': 'task{{@no}}'
   equal fragment1[0].children[0].innerHTML, '', 'no child'
 
   lists.push { no: 1 }
   lists.push { no: 3 }
-  equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task3</li>', '2 childs'
+  equal fragment1[0].children[0].innerHTML, '<li class=\"class-1\">task1</li><li class=\"class-3\">task3</li>', '2 childs'
 
   lists.push { no: 2 }
-  equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task3</li><li>task2</li>', '3 childs'
+  equal fragment1[0].children[0].innerHTML, '<li class=\"class-1\">task1</li><li class=\"class-3\">task3</li><li class=\"class-2\">task2</li>', '3 childs'
 
   lists.sort (a, b) -> a.get('no') - b.get('no')
-  equal fragment1[0].children[0].innerHTML, '<li>task1</li><li>task2</li><li>task3</li>', 'sorted childs'
+  equal fragment1[0].children[0].innerHTML, '<li class=\"class-1\">task1</li><li class=\"class-2\">task2</li><li class=\"class-3\">task3</li>', 'sorted childs'
 
 test 'CST @controller', ->
   testController = casua.defineController ->

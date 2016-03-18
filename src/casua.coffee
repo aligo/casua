@@ -1,6 +1,6 @@
 ###
 Casua 0.0.2
-Copyright (c) 2013-2014 aligo Kang
+Copyright (c) 2013-2016 aligo Kang
 
 Released under the MIT license
 ###
@@ -393,7 +393,7 @@ casua.defineController = (init_fn) ->
               when 'on'
                 if m = child.match __compute_controller_method_regexp
                   method = __resolveMethod(_controller, m[1])
-                  _root.on r[2], (e) -> method.call _context, e
+                  _root.on r[2], (e) -> method.call _context, e, _scope
               when 'html', 'text'
                 __nodeBind _controller, _root, r[1], _scope, _context, child
               when 'val'
@@ -482,7 +482,7 @@ casua.defineController = (init_fn) ->
     else if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
       getter = -> _node.val method.call(_context)
-      setter = -> method.call _context, _node.val()
+      setter = -> method.call _context, _node.val(), _scope
     else
       return __nodeBind _controller, _root, 'val', _scope, _context, child
     _node.on 'change', setter
@@ -517,7 +517,7 @@ casua.defineController = (init_fn) ->
     keys_to_watch = []
     watch_fn = if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
-      -> fn.call {}, method.call(_context)
+      -> fn.call {}, method.call(_context, _scope)
     else if r = src.match __compute_scope_key_regexp
       -> fn.call {}, @get(r[1])
     else if r = src.match __compute_match_regexp
@@ -527,7 +527,7 @@ casua.defineController = (init_fn) ->
           part = part.match __compute_match_key_regexp
           if r = part[1].match __compute_controller_method_regexp
             method = __resolveMethod _controller, r[1]
-            method.call _context
+            method.call _context, _scope
           else if r = part[1].match __compute_scope_key_regexp
             scope.get(r[1])
     else if to_eval
@@ -537,7 +537,7 @@ casua.defineController = (init_fn) ->
       src = src.replace __compute_controller_regexp, (part) ->
         part = part.match __compute_controller_method_regexp
         mm[part[1]] = __resolveMethod _controller, part[1]
-        'mm["' + part[1] + '"].call(ct)'
+        'mm["' + part[1] + '"].call(ct, _scope)'
       src = src.replace __compute_scope_regexp, (part) ->
         part = part.match __compute_scope_key_regexp
         'sc.get("' + part[1] + '")'
