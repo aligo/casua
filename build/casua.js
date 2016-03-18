@@ -487,6 +487,9 @@ Released under the MIT license
     };
 
     Scope.prototype.$startGetWatches = function() {
+      if (this._parent != null) {
+        this._parent.$startGetWatches();
+      }
       return this._watch_lists = [];
     };
 
@@ -503,6 +506,9 @@ Released under the MIT license
         return results;
       }).call(this);
       delete this._watch_lists;
+      if (this._parent != null) {
+        lists = lists.concat(this._parent.$stopGetWatches());
+      }
       return lists;
     };
 
@@ -909,11 +915,10 @@ Released under the MIT license
     __compute_controller_regexp = /(\w\S*)\(\)/g;
     __compute_controller_method_regexp = /^(\w\S*)\(\)$/;
     __computeBind = function(_controller, _scope, _context, src, fn, to_eval) {
-      var ct, key, keys_to_watch, l, len, method, mm, r, ref, results, sc, watch_fn;
+      var ct, key, l, len, method, mm, r, ref, results, sc, watch_fn;
       if (to_eval == null) {
         to_eval = false;
       }
-      keys_to_watch = [];
       watch_fn = (r = src.match(__compute_controller_method_regexp)) ? (method = __resolveMethod(_controller, r[1]), function() {
         return fn.call({}, method.call(_context, _scope));
       }) : (r = src.match(__compute_scope_key_regexp)) ? function() {
@@ -933,7 +938,7 @@ Released under the MIT license
       } : to_eval ? (ct = _context, sc = _scope, mm = {}, src = src.replace(__compute_controller_regexp, function(part) {
         part = part.match(__compute_controller_method_regexp);
         mm[part[1]] = __resolveMethod(_controller, part[1]);
-        return 'mm["' + part[1] + '"].call(ct, _scope)';
+        return 'mm["' + part[1] + '"].call(ct, sc)';
       }), src = src.replace(__compute_scope_regexp, function(part) {
         part = part.match(__compute_scope_key_regexp);
         return 'sc.get("' + part[1] + '")';

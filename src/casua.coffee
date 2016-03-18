@@ -283,12 +283,14 @@ class casua.Scope
     @
 
   $startGetWatches: ->
+    @_parent.$startGetWatches() if @_parent?
     @_watch_lists = []
 
   $stopGetWatches: ->
     lists = for one in @_watch_lists
       one
     delete @_watch_lists
+    lists = lists.concat @_parent.$stopGetWatches() if @_parent?
     lists
 
 _scopeChangeLength = (_scope, fn) ->
@@ -514,7 +516,6 @@ casua.defineController = (init_fn) ->
   __compute_controller_method_regexp = /^(\w\S*)\(\)$/
 
   __computeBind = (_controller, _scope, _context, src, fn, to_eval = false) ->
-    keys_to_watch = []
     watch_fn = if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
       -> fn.call {}, method.call(_context, _scope)
@@ -537,7 +538,7 @@ casua.defineController = (init_fn) ->
       src = src.replace __compute_controller_regexp, (part) ->
         part = part.match __compute_controller_method_regexp
         mm[part[1]] = __resolveMethod _controller, part[1]
-        'mm["' + part[1] + '"].call(ct, _scope)'
+        'mm["' + part[1] + '"].call(ct, sc)'
       src = src.replace __compute_scope_regexp, (part) ->
         part = part.match __compute_scope_key_regexp
         'sc.get("' + part[1] + '")'

@@ -66,4 +66,4 @@ build = (callback) ->
 
 doc = (callback) ->
   exec 'coffee ./doc/generate.coffee', [], ->
-    launch 'cp', ['doc/doc.css', 'gh-pages/', '-f'], callback
+    launch 'cp', ['-f', 'doc/doc.css', 'gh-pages/'], callback
