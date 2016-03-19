@@ -8,7 +8,7 @@ Released under the MIT license
  */
 
 (function() {
-  var __boolean_attr_regexp, __mutiple_levels_key_regexp, _css_selector, _escapeHTML, _escape_chars, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeChangeLength, _scopeInitParent, _scopeRemovePrepare, _shallowCopy, casua, k, v,
+  var __boolean_attr_regexp, __mutiple_levels_key_regexp, _css_selector, _escapeHTML, _escape_chars, _isFunction, _reversed_escape_chars, _scopeCallAltWatch, _scopeCallWatch, _scopeChangeLength, _scopeInitParent, _scopeRemovePrepare, _shallowCopy, casua, k, v,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -22,6 +22,10 @@ Released under the MIT license
       dst[key] = value;
     }
     return dst;
+  };
+
+  _isFunction = function(obj) {
+    return !!(obj && obj.constructor && obj.call && obj.apply);
   };
 
   _escape_chars = {
@@ -841,20 +845,14 @@ Released under the MIT license
     };
     __keep_original_attr_regexp = /^class$/;
     __nodeAttrBind = function(_controller, _node, attr, _scope, _context, src) {
-      var o, original, r, setter;
+      var o, original;
       original = attr.match(__keep_original_attr_regexp) && (o = _node.attr(attr)) ? o + ' ' : void 0;
-      __computeBind(_controller, _scope, _context, src, function(result) {
+      return __computeBind(_controller, _scope, _context, src, function(result) {
         if (original != null) {
           result = original + result;
         }
         return _node.attr(attr, result);
       });
-      if (attr.match(__boolean_attr_regexp) && (r = src.match(__compute_scope_key_regexp))) {
-        setter = function() {
-          return _scope.set(r[1], _node.attr(attr));
-        };
-        return _node.on('click', setter);
-      }
     };
     __nodeValueBind = function(_controller, _node, _scope, _context, src) {
       var getter, key, l, len, method, r, ref, results, setter;
@@ -919,7 +917,9 @@ Released under the MIT license
       if (to_eval == null) {
         to_eval = false;
       }
-      watch_fn = (r = src.match(__compute_controller_method_regexp)) ? (method = __resolveMethod(_controller, r[1]), function() {
+      watch_fn = _isFunction(src) ? function() {
+        return fn.call({}, src.call(_context, _scope));
+      } : (r = src.match(__compute_controller_method_regexp)) ? (method = __resolveMethod(_controller, r[1]), function() {
         return fn.call({}, method.call(_context, _scope));
       }) : (r = src.match(__compute_scope_key_regexp)) ? function() {
         return fn.call({}, this.get(r[1]));

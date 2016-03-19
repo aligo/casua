@@ -30,6 +30,9 @@
           return '';
         }
       },
+      checkTask: function() {
+        return scope.set('done', !scope.get('done'));
+      },
       removeTask: function() {
         return tasks_scope.remove(tasks_scope.indexOf(scope));
       },
@@ -58,6 +61,7 @@
           'span': {
             '@unless': '@editing',
             'input type="checkbox"': {
+              '@on click': 'checkTask()',
               '@attr checked': '@done'
             },
             'span': {

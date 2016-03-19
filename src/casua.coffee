@@ -475,14 +475,14 @@ casua.defineController = (init_fn) ->
     __computeBind _controller, _scope, _context, src, (result) ->
       result = original + result if original?
       _node.attr attr, result
-    if attr.match(__boolean_attr_regexp)
-      if _isFunction(src)
-        setter = ->
-          src.call _context, _node.attr(attr), _scope
-      else if r = src.match(__compute_scope_key_regexp)
-        setter = ->
-          _scope.set r[1], _node.attr(attr)
-      _node.on 'click', setter
+    # if attr.match(__boolean_attr_regexp)
+    #   if _isFunction(src)
+    #     setter = ->
+    #       src.call _context, _node.attr(attr), _scope
+    #   else if r = src.match(__compute_scope_key_regexp)
+    #     setter = ->
+    #       _scope.set r[1], _node.attr(attr)
+    #   _node.on 'click', setter
 
   __nodeValueBind = (_controller, _node, _scope, _context, src) ->
     if r = src.match __compute_scope_key_regexp

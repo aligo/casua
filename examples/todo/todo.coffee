@@ -13,6 +13,8 @@ TaskCtrl = casua.defineController (scope) ->
       'is-done'
     else
       ''
+  checkTask: ->
+    scope.set 'done', !scope.get('done')
   removeTask: ->
     tasks_scope.remove tasks_scope.indexOf(scope)
   startEdit: ->
@@ -33,6 +35,7 @@ template =
         'span':
           '@unless': '@editing'
           'input type="checkbox"':
+            '@on click': 'checkTask()'
             '@attr checked': '@done'
           'span':
             '@on dblclick': 'startEdit()'

@@ -93,6 +93,14 @@ test 'CST @attr', ->
       '@class': 'another-{{@alt_class}}'
   equal fragment3[0].children[0].outerHTML, '<div class=\"original another-1\"></div>', 'bind @class for short'
 
+  scope.set 'alt_class', 3
+  fragment4 = testCtrlInst.render
+    'div.original':
+      '@class': (scope) ->
+        'computed-' + (scope.get('alt_class') / 3).toString()
+  equal fragment4[0].children[0].outerHTML, '<div class=\"original computed-1\"></div>', 'bind @class with function in view'
+
+
 test 'CST @val', ->
   changed = 0
   testController = casua.defineController (scope) ->
