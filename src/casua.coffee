@@ -233,7 +233,7 @@ __mutiple_levels_key_regexp = /^([^\.]+)\.(.+)$/
 class casua.Scope
 
   constructor: (init_data, parent) ->
-    if init_data instanceof casua.Scope
+    if _isFunction(init_data) || ( init_data instanceof casua.Scope ) || ( init_data instanceof casua.Node )
       return init_data
     else if init_data.length?
       return new casua.ArrayScope init_data, parent
@@ -399,7 +399,7 @@ casua.defineController = (init_fn) ->
                 if m = child.match __compute_controller_method_regexp
                   method = __resolveMethod(_controller, m[1])
                   _root.on r[2], (e) -> method.call _context, e, _scope
-              when 'html', 'text'
+              when 'html', 'text', 'append'
                 __nodeBind _controller, _root, r[1], _scope, _context, child
               when 'val'
                 __nodeValueBind _controller, _root, _scope, _context, child

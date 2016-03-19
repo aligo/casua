@@ -413,7 +413,7 @@ Released under the MIT license
   casua.Scope = (function() {
     function Scope(init_data, parent) {
       var key, value;
-      if (init_data instanceof casua.Scope) {
+      if (_isFunction(init_data) || (init_data instanceof casua.Scope) || (init_data instanceof casua.Node)) {
         return init_data;
       } else if (init_data.length != null) {
         return new casua.ArrayScope(init_data, parent);
@@ -720,6 +720,7 @@ Released under the MIT license
                   break;
                 case 'html':
                 case 'text':
+                case 'append':
                   __nodeBind(_controller, _root, r[1], _scope, _context, child);
                   break;
                 case 'val':
