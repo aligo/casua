@@ -10,6 +10,9 @@ _shallowCopy = (src, dst = {}) ->
   dst[key] = value for key, value of src
   dst
 
+_isFunction = (obj) ->
+  !!(obj && obj.constructor && obj.call && obj.apply);
+
 _escape_chars = { lt: '<', gt: '>', quot: '"', amp: '&', apos: "'" }
 _reversed_escape_chars = {}
 _reversed_escape_chars[v] = k for k, v of _escape_chars 
@@ -472,9 +475,13 @@ casua.defineController = (init_fn) ->
     __computeBind _controller, _scope, _context, src, (result) ->
       result = original + result if original?
       _node.attr attr, result
-    if attr.match(__boolean_attr_regexp) && r = src.match(__compute_scope_key_regexp)
-      setter = ->
-        _scope.set r[1], _node.attr(attr)
+    if attr.match(__boolean_attr_regexp)
+      if _isFunction(src)
+        setter = ->
+          src.call _context, _node.attr(attr), _scope
+      else if r = src.match(__compute_scope_key_regexp)
+        setter = ->
+          _scope.set r[1], _node.attr(attr)
       _node.on 'click', setter
 
   __nodeValueBind = (_controller, _node, _scope, _context, src) ->
@@ -516,7 +523,9 @@ casua.defineController = (init_fn) ->
   __compute_controller_method_regexp = /^(\w\S*)\(\)$/
 
   __computeBind = (_controller, _scope, _context, src, fn, to_eval = false) ->
-    watch_fn = if r = src.match __compute_controller_method_regexp
+    watch_fn = if _isFunction(src)
+      -> fn.call {}, src.call(_context, _scope)
+    else if r = src.match __compute_controller_method_regexp
       method = __resolveMethod _controller, r[1]
       -> fn.call {}, method.call(_context, _scope)
     else if r = src.match __compute_scope_key_regexp
