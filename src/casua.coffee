@@ -280,6 +280,7 @@ class casua.Scope
   $watch: (key, fn) ->
     if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
       @get(r[1]).$watch r[2], fn
+      @$watch r[1], fn
     else
       @_watches[key] ||= []
       @_watches[key].push fn

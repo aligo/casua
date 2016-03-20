@@ -483,6 +483,7 @@ Released under the MIT license
       var base, r;
       if (typeof key === 'string' && (r = key.match(__mutiple_levels_key_regexp))) {
         this.get(r[1]).$watch(r[2], fn);
+        this.$watch(r[1], fn);
       } else {
         (base = this._watches)[key] || (base[key] = []);
         this._watches[key].push(fn);
