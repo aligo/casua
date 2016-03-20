@@ -246,7 +246,10 @@ class casua.Scope
   get: (key) ->
     @_watch_lists.push key if @_watch_lists && @_watch_lists.indexOf(key) == -1
     if typeof key is 'string' && r = key.match __mutiple_levels_key_regexp
-      @get(r[1]).get(r[2])
+      if path = @get(r[1])
+        path.get(r[2])
+      else
+        null
     else if key == '$parent'
       @_parent
     else
