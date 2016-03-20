@@ -412,7 +412,7 @@ casua.defineController = (init_fn) ->
               when 'class'
                 __nodeAttrBind _controller, _root, r[1], _scope, _context, child
               when 'child'
-                _renderNode _controller, _scope.get(r[2]), _root, named_nodes, child
+                __nodeChildBind _controller, _root, r[2], _scope, named_nodes, child
               when 'if'
                 __nodeCondition _controller, _root, r[1], _scope, _context, child
               when 'unless'
@@ -467,6 +467,12 @@ casua.defineController = (init_fn) ->
         context[name] ||= bound_fn
       $parent = $parent.$parent = {} if parent = parent._parent
     context
+
+  __nodeChildBind = (_controller, _root, attr, _scope, named_nodes, child) ->
+    watch_fn = ->
+      _renderNode _controller, _scope.get(attr), _root, named_nodes, child
+      _scope.$watch attr, watch_fn
+    watch_fn.call _scope
 
   __nodeBind = (_controller, _node, _method, _scope, _context, src) ->
     __computeBind _controller, _scope, _context, src, (result) ->
